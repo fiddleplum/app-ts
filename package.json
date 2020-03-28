@@ -1,0 +1,36 @@
+{
+	"name": "@fiddleplum/app-js",
+	"version": "1.0.0",
+	"description": "AppJS",
+	"private": false,
+	"scripts": {
+		"setup": "yarn install; mkdir -p dist; cp www/config.example.js dist/config.js",
+		"update": "yarn install --no-default-rc",
+		"rsync_www": "mkdir -p dist; rsync -r --delete --exclude=\"config.js\" --exclude=\"config.example.js\" www/ dist/",
+		"build": "yarn rsync_www; webpack --config webpack.dev.js",
+		"build-production": "yarn rsync_www; webpack --config webpack.prod.js",
+		"start": "yarn rsync_www; webpack-dev-server --config webpack.dev.js --content-base dist/"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/fiddleplum/app-js.git"
+	},
+	"author": "Stephen Hurley",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/fiddleplum/app-js/issues"
+	},
+	"homepage": "https://github.com/fiddleplum/app-js",
+	"devDependencies": {
+		"eslint": "latest",
+		"@typescript-eslint/parser": "latest",
+		"@typescript-eslint/eslint-plugin": "latest",
+		"raw-loader": "latest",
+		"ts-loader": "latest",
+		"typescript": "latest",
+		"webpack": "latest",
+		"webpack-cli": "latest",
+		"webpack-dev-server": "latest",
+		"webpack-merge": "latest"
+	}
+}
