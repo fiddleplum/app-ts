@@ -1,16 +1,10 @@
-interface Query {
-	[key: string]: string
-}
-
-type Callback = ((query: Query) => void);
-
 /** A router that supports query strings, pushing, and replacing using the history API. */
-export default class Router {
+class Router {
 	/** The current query. */
-	private query: Query = {};
+	private query: Router.Query = {};
 
 	/** The callback to be called when the query changes. */
-	private callbacks: Set<Callback> = new Set();
+	private callbacks: Set<Router.Callback> = new Set();
 
 	constructor() {
 		// Add an event listener so that it processes an event when the user uses the History API,
@@ -26,17 +20,17 @@ export default class Router {
 	}
 
 	/** Adds the callback for when the URL query params have changed. */
-	addCallback(callback: Callback) {
+	addCallback(callback: Router.Callback) {
 		this.callbacks.add(callback);
 	}
 
 	/** Removes the callback for when the URL query params have changed. */
-	removeCallback(callback: Callback) {
+	removeCallback(callback: Router.Callback) {
 		this.callbacks.delete(callback);
 	}
 
 	/** Pushes a query to the history and process it, calling the callback. */
-	pushQuery(query: Query) {
+	pushQuery(query: Router.Query) {
 		// Copy over query.
 		this.query = {};
 		for (const key in query) {
@@ -50,7 +44,7 @@ export default class Router {
 	}
 
 	/** Replaces the query at the top of the history. Does not call the callback. */
-	replaceQuery(query: Query) {
+	replaceQuery(query: Router.Query) {
 		// Copy over query.
 		this.query = {};
 		for (const key in query) {
@@ -72,7 +66,7 @@ export default class Router {
 	}
 
 	/** Turns a query into a string suitable for a URL. */
-	private createQueryString(query: Query) {
+	private createQueryString(query: Router.Query) {
 		let queryString = '';
 		for (const key in query) {
 			if (query[key] === '') {
@@ -93,3 +87,15 @@ export default class Router {
 		}
 	}
 }
+
+namespace Router {
+	/** The query accepted by the router. */
+	export interface Query {
+		[key: string]: string
+	}
+
+	/** The callback format when processing a query. */
+	export type Callback = ((query: Query) => void);
+}
+
+export default Router;

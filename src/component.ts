@@ -1,50 +1,11 @@
 import hasOwnProperty from './hasOwnProperty';
 
-/** The params of an element that will become a component. */
-class Params {
-	/** The reference of the component, if it has one. */
-	public ref: string = '';
-
-	/** The attributes passed as if it were <Component attrib=''...>. */
-	public attributes: Map<string, any> = new Map();
-
-	/** The children of the node as if it were <Component><child1/>...</Component>. */
-	public children: Node[] = [];
-}
-
-/** The registry entry that describes a component type. */
-class RegistryEntry {
-	/** The component type. */
-	public ComponentType: typeof Component;
-
-	/** The HTML for the ComponentType. */
-	public html: string;
-
-	/** The CSS for the ComponentType. */
-	public css: string;
-
-	/** The ancestor registry entries, including ComponentType and Component. */
-	public ancestors: RegistryEntry[] = [];
-
-	/** The style element. */
-	public styleElem: HTMLStyleElement | null = null;
-
-	/** The number of components using this style. Includes ComponentType and all its descendants. */
-	public styleCount: number = 0;
-
-	constructor(ComponentType: typeof Component) {
-		this.ComponentType = ComponentType;
-		this.html = ComponentType.html ? ComponentType.html.replace(/[\t\n]+/g, '').trim() : '';
-		this.css = ComponentType.css ? ComponentType.css.trim() : '';
-	}
-}
-
 /**
  * A base component from which other components can extend.
  * Each subclass can have an `html` and a `style` property to add style to the components.
  * Only the most derived subclass's `html` property will be used.
  */
-export default class Component {
+class Component {
 	/** The parent's reference to the component. */
 	private ref: string;
 
@@ -61,10 +22,10 @@ export default class Component {
 	private componentRefs: Map<string, Component> = new Map();
 
 	/** The registry entry. */
-	private registryEntry: RegistryEntry;
+	private registryEntry: Component.RegistryEntry;
 
 	/** The registered components, mapped from string to Component type. */
-	private static registry: Map<string, RegistryEntry> = new Map();
+	private static registry: Map<string, Component.RegistryEntry> = new Map();
 
 	/** The HTML that goes with the component. */
 	public static html = '';
@@ -72,10 +33,7 @@ export default class Component {
 	/** The CSS that goes with the component. */
 	public static css = '';
 
-	/** The params of an element that will become a component. */
-	public static Params = Params;
-
-	constructor(params: Params) {
+	constructor(params: Component.Params) {
 		// Make sure the component is registered.
 		let registryEntry = Component.registry.get(this.constructor.name.toLowerCase());
 		if (registryEntry === undefined) {
@@ -196,7 +154,7 @@ export default class Component {
 
 	/** Sets a new component of type *ComponentType* as a child of *parentNode* right before
 	 * the child *beforeChild* using the *params*. */
-	__insertComponent<T extends Component>(ComponentType: new (params: Params) => T, parentNode: Node, beforeChild: Node | null, params: Params): T {
+	__insertComponent<T extends Component>(ComponentType: new (params: Component.Params) => T, parentNode: Node, beforeChild: Node | null, params: Component.Params): T {
 		// Create the component.
 		const newComponent = new ComponentType(params);
 
@@ -287,7 +245,7 @@ export default class Component {
 	private setComponents(element: Element) {
 		const registryEntry = Component.registry.get(element.tagName.toLowerCase());
 		if (registryEntry !== undefined) {
-			const params = new Params();
+			const params = new Component.Params();
 			// Get the reference id.
 			params.ref = element.attributes.getNamedItem('ref')!.value || '';
 			// Get the attributes.
@@ -394,7 +352,7 @@ export default class Component {
 			throw new Error('A component named "' + this.name + '" is already registered.');
 		}
 
-		const entry = new RegistryEntry(this);
+		const entry = new Component.RegistryEntry(this);
 
 		entry.ancestors.push(entry);
 
@@ -416,4 +374,47 @@ export default class Component {
 	}
 }
 
+namespace Component {
+	/** The params of an element that will become a component. */
+	export class Params {
+		/** The reference of the component, if it has one. */
+		public ref: string = '';
+
+		/** The attributes passed as if it were <Component attrib=''...>. */
+		public attributes: Map<string, any> = new Map();
+
+		/** The children of the node as if it were <Component><child1/>...</Component>. */
+		public children: Node[] = [];
+	}
+
+	/** The registry entry that describes a component type. */
+	export class RegistryEntry {
+		/** The component type. */
+		public ComponentType: typeof Component;
+
+		/** The HTML for the ComponentType. */
+		public html: string;
+
+		/** The CSS for the ComponentType. */
+		public css: string;
+
+		/** The ancestor registry entries, including ComponentType and Component. */
+		public ancestors: RegistryEntry[] = [];
+
+		/** The style element. */
+		public styleElem: HTMLStyleElement | null = null;
+
+		/** The number of components using this style. Includes ComponentType and all its descendants. */
+		public styleCount: number = 0;
+
+		constructor(ComponentType: typeof Component) {
+			this.ComponentType = ComponentType;
+			this.html = ComponentType.html ? ComponentType.html.replace(/[\t\n]+/g, '').trim() : '';
+			this.css = ComponentType.css ? ComponentType.css.trim() : '';
+		}
+	}
+}
+
 Component.register();
+
+export default Component;

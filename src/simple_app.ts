@@ -1,53 +1,42 @@
 import App from './app';
 import ShowHide from './show_hide';
-/** @typedef {import('./component').default} Component */
+import Component from './component';
+import Router from './router';
 
-export default class SimpleApp extends App {
+class SimpleApp extends App {
+	/** A mapping from page names to page components. */
+	private pages: Map<String, typeof SimpleApp.Page> = new Map();
+
+	/** The current page. */
+	private page: SimpleApp.Page | null = null;
+
 	constructor() {
 		super();
-
-		/**
-		 * A mapping from page names to page components.
-		 * @type {Map<string, new (app:SimpleApp) => Component>}
-		 * @private
-		 */
-		this._pages = new Map();
-
-		/**
-		 * The current page.
-		 * @type {Component}
-		 * @private
-		 */
-		this._page = null;
 
 		// Setup the router callback.
 		this.router.addCallback(this._processQuery.bind(this));
 	}
 
-	/**
-	 * Sets the title HTML.
-	 * @param {string} title
-	 */
-	set title(title) {
-		this.__element('title').innerHTML = title;
+	/** Sets the title HTML. */
+	set title(title: string) {
+		const titleElem = this.__element('title');
+		if (titleElem !== null) {
+			titleElem.innerHTML = title;
+		}
 	}
 
-	/**
-	 * Sets the message HTML.
-	 * @param {string} message
-	 */
-	set message(message) {
+	/** Sets the message HTML. */
+	set message(message: string) {
 		console.log(message);
-		this.__element('message').innerHTML = message;
+		const messageElem = this.__element('message');
+		if (messageElem !== null) {
+			messageElem.innerHTML = message;
+		}
 	}
 
-	/**
-	 * Registers a component as a page.
-	 * @param {string} pageName
-	 * @param {new (app:SimpleApp) => Component} PageClass
-	 */
-	registerPage(pageName, PageClass) {
-		this._pages.set(pageName, PageClass);
+	/** Registers a component as a page. */
+	registerPage(pageName: string, PageClass: typeof SimpleApp.Page) {
+		this.pages.set(pageName, PageClass);
 	}
 
 	/**
@@ -55,24 +44,28 @@ export default class SimpleApp extends App {
 	 * @param {Object<string, string>} query
 	 * @private
 	 */
-	async _processQuery(query) {
+	async _processQuery(query: Router.Query) {
 		const pageName = query.page || '';
-		const Page = this._pages.get(pageName);
+		const Page = this.pages.get(pageName);
 		if (Page === undefined) {
 			this.message = 'Page "' + pageName + '" not found. Return to <a href=".">home</a>.';
 			return;
 		}
 		// If it's the same page, do nothing.
-		if (this._page instanceof Page) {
+		if (this.page !== null && this.page.constructor === Page) {
 			return;
 		}
+		// Hide and delete old page.
 		const pageElement = this.__element('page');
 		if (pageElement instanceof HTMLElement) {
 			await ShowHide.hide(pageElement);
-			this.__deleteComponent(this._page);
 		}
-		this._page = this.__insertComponent(pageElement, null, Page, this);
+		if (this.page !== null) {
+			this.__deleteComponent(this.page);
+		}
+		// Create and show new page.
 		if (pageElement instanceof HTMLElement) {
+			this.page = this.__insertComponent(Page, pageElement, null, new Component.Params());
 			await ShowHide.show(pageElement);
 		}
 	}
@@ -140,3 +133,21 @@ SimpleApp.css = `
 	`;
 
 App.setAppClass(SimpleApp);
+
+namespace SimpleApp {
+	export class Page extends Component {
+		public readonly app: SimpleApp;
+	
+		constructor(params: Component.Params) {
+			super(params);
+	
+			const app = params.attributes.get('app');
+			if (!(app instanceof SimpleApp)) {
+				throw new Error('While constructing page ' + this.constructor.name + ', app is not a SimpleApp.');
+			}
+			this.app = app;
+		}
+	}
+}
+
+export default SimpleApp;
