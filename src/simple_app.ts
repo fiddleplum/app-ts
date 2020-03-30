@@ -5,7 +5,7 @@ import Router from './router';
 
 class SimpleApp extends App {
 	/** A mapping from page names to page components. */
-	private pages: Map<String, typeof SimpleApp.Page> = new Map();
+	private pages: Map<string, typeof SimpleApp.Page> = new Map();
 
 	/** The current page. */
 	private page: SimpleApp.Page | null = null;
@@ -35,7 +35,7 @@ class SimpleApp extends App {
 	}
 
 	/** Registers a component as a page. */
-	registerPage(pageName: string, PageClass: typeof SimpleApp.Page) {
+	registerPage(pageName: string, PageClass: typeof SimpleApp.Page): void {
 		this.pages.set(pageName, PageClass);
 	}
 
@@ -44,8 +44,8 @@ class SimpleApp extends App {
 	 * @param {Object<string, string>} query
 	 * @private
 	 */
-	async _processQuery(query: Router.Query) {
-		const pageName = query.page || '';
+	private async _processQuery(query: Router.Query): Promise<void> {
+		const pageName = query.page !== undefined ? query.page : '';
 		const Page = this.pages.get(pageName);
 		if (Page === undefined) {
 			this.message = 'Page "' + pageName + '" not found. Return to <a href=".">home</a>.';
@@ -137,10 +137,10 @@ App.setAppClass(SimpleApp);
 namespace SimpleApp {
 	export class Page extends Component {
 		public readonly app: SimpleApp;
-	
+
 		constructor(params: Component.Params) {
 			super(params);
-	
+
 			const app = params.attributes.get('app');
 			if (!(app instanceof SimpleApp)) {
 				throw new Error('While constructing page ' + this.constructor.name + ', app is not a SimpleApp.');

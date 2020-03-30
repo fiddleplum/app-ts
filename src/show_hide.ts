@@ -1,7 +1,6 @@
 export default class ShowHide {
 	/** Shows an element in an animated way over the duration. The element must be a block display style. */
-	static async show(element: HTMLElement, durationInSeconds = 0.125): Promise<void>
-	{
+	static async show(element: HTMLElement, durationInSeconds = 0.125): Promise<void> {
 		const fps = 30.0;
 		if (element.style.display === 'none') {
 			element.style.opacity = '0';

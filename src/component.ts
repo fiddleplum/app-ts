@@ -35,7 +35,7 @@ class Component {
 
 	constructor(params: Component.Params) {
 		// Make sure the component is registered.
-		let registryEntry = Component.registry.get(this.constructor.name.toLowerCase());
+		const registryEntry = Component.registry.get(this.constructor.name.toLowerCase());
 		if (registryEntry === undefined) {
 			throw new Error('The component "' + this.constructor.name + '" has not been registered.');
 		}
@@ -104,7 +104,7 @@ class Component {
 	/**
 	 * Destroys this when it is no longer needed. Call to clean up the object.
 	 */
-	__destroy() {
+	__destroy(): void {
 		// Destroy all child components.
 		for (const component of this.components) {
 			component.__destroy();
@@ -126,17 +126,19 @@ class Component {
 
 	/** Gets the element with the reference or null if not found. */
 	__element(ref: string): Element | null {
-		return this.elementRefs.get(ref) || null;
+		const element = this.elementRefs.get(ref);
+		return element !== undefined ? element : null;
 	}
 
 	/** Gets the component with the reference or null if not found. */
 	__component(ref: string): Component | null {
-		return this.componentRefs.get(ref) || null;
+		const component = this.componentRefs.get(ref);
+		return component != undefined ? component : null;
 	}
 
 	/** Sets the inner html for an referenced element. Cleans up tabs and newlines.
 	 * Cleans up old handlers and components and adds new handlers and components. */
-	__setHtml(element: Element, html: string) {
+	__setHtml(element: Element, html: string): void {
 		html = html.replace(/[\t\n]+/g, '');
 		for (const child of element.children) {
 			this.unsetRefs(child);
@@ -172,7 +174,7 @@ class Component {
 	}
 
 	/** Deletes the referenced component. Does nothing if it isn't found. */
-	__deleteComponent(component: Component) {
+	__deleteComponent(component: Component): void {
 		if (!this.components.has(component)) {
 			return;
 		}
@@ -195,7 +197,7 @@ class Component {
 
 	/** Connects the component's root nodes as children of *parentNode* right before
 	 * the child *beforeChild*. */
-	__connectRootNodes(parentNode: Node, beforeChild: Node | null) {
+	__connectRootNodes(parentNode: Node, beforeChild: Node | null): void {
 		// Connect the component to its parent.
 		for (const rootNode of this.rootNodes) {
 			if (beforeChild !== null) {
@@ -208,7 +210,7 @@ class Component {
 	}
 
 	/** Sets the refs for the element and its children. */
-	private setRefs(element: Element) {
+	private setRefs(element: Element): void {
 		if (element.classList.contains('Component')) {
 			return; // Don't process child components.
 		}
@@ -227,7 +229,7 @@ class Component {
 	}
 
 	/** Unsets the refs for the node and its children. */
-	private unsetRefs(element: Element) {
+	private unsetRefs(element: Element): void {
 		if (element.classList.contains('Component')) {
 			return; // Don't process child components.
 		}
@@ -242,19 +244,24 @@ class Component {
 
 	/** Goes through all of the tags, and for any that match a component in the registry, sets it with
 	 * the matching component. Goes through all of the children also. */
-	private setComponents(element: Element) {
+	private setComponents(element: Element): void {
 		const registryEntry = Component.registry.get(element.tagName.toLowerCase());
 		if (registryEntry !== undefined) {
 			const params = new Component.Params();
 			// Get the reference id.
-			params.ref = element.attributes.getNamedItem('ref')!.value || '';
+			const refAttribute = element.attributes.getNamedItem('ref');
+
+			if (refAttribute !== null) {
+				params.ref = refAttribute.value;
+			}
 			// Get the attributes.
 			for (const attribute of element.attributes) {
-				let value: any = attribute.value;
-				if (value.startsWith('{{') && value.endsWith('}}')) {
-					value = attribute.value.substring(2, attribute.value.length - 2);
-					if (hasOwnProperty(this, value)) {
-						value = this[value];
+				let attributeValue = attribute.value;
+				let value: unknown;
+				if (attributeValue.startsWith('{{') && attributeValue.endsWith('}}')) {
+					attributeValue = attributeValue.substring(2, attributeValue.length - 2);
+					if (hasOwnProperty(this, attributeValue)) {
+						value = this[attributeValue];
 						if (value instanceof Function) {
 							value = value.bind(this);
 						}
@@ -280,7 +287,7 @@ class Component {
 	}
 
 	/** Unsets all of the components that are in the node. Used before setting new HTML. */
-	private unsetComponents(node: Node) {
+	private unsetComponents(node: Node): void {
 		for (const component of this.components) {
 			for (const rootNode of component.rootNodes) {
 				if (node === rootNode || node.contains(rootNode)) {
@@ -293,7 +300,7 @@ class Component {
 
 	/** Sets the event handlers for all children of elem. Searches for all attributes starting with
 	 * 'on' and processes them. */
-	private setEventHandlersFromElemAttributes(element: Element) {
+	private setEventHandlersFromElemAttributes(element: Element): void {
 		const attributeNamesToRemove = [];
 		for (const attribute of element.attributes) {
 			if (attribute.name.startsWith('on')) {
@@ -326,11 +333,11 @@ class Component {
 	/** Gets the inputs from a form along with their values. Each key/value pair is an input's name and
 	 * corresponding value. */
 	static getFormInputs(elem: Element): {[key: string]: string | boolean} {
-		const result:{[key: string]: string | boolean} = {};
+		const result: {[key: string]: string | boolean} = {};
 		for (const child of elem.children) {
 			if (child instanceof HTMLInputElement
-			 || child instanceof HTMLSelectElement
-			 || child instanceof HTMLTextAreaElement) {
+				|| child instanceof HTMLSelectElement
+				|| child instanceof HTMLTextAreaElement) {
 				const name = child.getAttribute('name');
 				if (name !== null) {
 					if (child instanceof HTMLInputElement && child.getAttribute('type') === 'checkbox') {
@@ -347,7 +354,7 @@ class Component {
 	}
 
 	/** Registers a component. */
-	static register() {
+	static register(): void {
 		if (this.registry.has(this.name.toLowerCase())) {
 			throw new Error('A component named "' + this.name + '" is already registered.');
 		}
@@ -357,7 +364,7 @@ class Component {
 		entry.ancestors.push(entry);
 
 		// Populate the ancestors.
-		let ancestor = this;
+		let ancestor: typeof Component = this;
 		while (true) {
 			if (ancestor === Component) {
 				break;
@@ -378,10 +385,10 @@ namespace Component {
 	/** The params of an element that will become a component. */
 	export class Params {
 		/** The reference of the component, if it has one. */
-		public ref: string = '';
+		public ref = '';
 
 		/** The attributes passed as if it were <Component attrib=''...>. */
-		public attributes: Map<string, any> = new Map();
+		public attributes: Map<string, unknown> = new Map();
 
 		/** The children of the node as if it were <Component><child1/>...</Component>. */
 		public children: Node[] = [];
@@ -405,12 +412,12 @@ namespace Component {
 		public styleElem: HTMLStyleElement | null = null;
 
 		/** The number of components using this style. Includes ComponentType and all its descendants. */
-		public styleCount: number = 0;
+		public styleCount = 0;
 
 		constructor(ComponentType: typeof Component) {
 			this.ComponentType = ComponentType;
-			this.html = ComponentType.html ? ComponentType.html.replace(/[\t\n]+/g, '').trim() : '';
-			this.css = ComponentType.css ? ComponentType.css.trim() : '';
+			this.html = ComponentType.html !== undefined ? ComponentType.html.replace(/[\t\n]+/g, '').trim() : '';
+			this.css = ComponentType.css !== undefined ? ComponentType.css.trim() : '';
 		}
 	}
 }

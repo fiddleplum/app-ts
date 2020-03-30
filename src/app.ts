@@ -11,12 +11,12 @@ export default class App extends Component {
 
 	/** Sets the subclass of App to be instantiated. It should be called in the main script,
 	 * outside of any function. */
-	static setAppClass(appClass: typeof App) {
+	static setAppClass(appClass: typeof App): void {
 		App.appClass = appClass;
 	}
 
 	/** Creates the app. */
-	static createApp() {
+	static createApp(): void {
 		const app = new App.appClass();
 		app.__connectRootNodes(document.body, null);
 	}
