@@ -8,8 +8,7 @@
 		"update": "yarn install --no-default-rc",
 		"rsync_www": "mkdir -p dist; rsync -r --delete --exclude=\"config.js\" --exclude=\"config.example.js\" www/ dist/",
 		"build": "yarn rsync_www; webpack --config webpack.dev.js",
-		"build-production": "yarn rsync_www; webpack --config webpack.prod.js",
-		"start": "yarn rsync_www; webpack-dev-server --config webpack.dev.js --content-base dist/"
+		"build-production": "yarn rsync_www; webpack --config webpack.prod.js"
 	},
 	"repository": {
 		"type": "git",
