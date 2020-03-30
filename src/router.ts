@@ -15,22 +15,22 @@ class Router {
 	}
 
 	/** Gets value of the given URL query key. */
-	getValue(key: string) {
+	getValue(key: string): string {
 		return this.query[key];
 	}
 
 	/** Adds the callback for when the URL query params have changed. */
-	addCallback(callback: Router.Callback) {
+	addCallback(callback: Router.Callback): void {
 		this.callbacks.add(callback);
 	}
 
 	/** Removes the callback for when the URL query params have changed. */
-	removeCallback(callback: Router.Callback) {
+	removeCallback(callback: Router.Callback): void {
 		this.callbacks.delete(callback);
 	}
 
 	/** Pushes a query to the history and process it, calling the callback. */
-	pushQuery(query: Router.Query) {
+	pushQuery(query: Router.Query): void {
 		// Copy over query.
 		this.query = {};
 		for (const key in query) {
@@ -44,7 +44,7 @@ class Router {
 	}
 
 	/** Replaces the query at the top of the history. Does not call the callback. */
-	replaceQuery(query: Router.Query) {
+	replaceQuery(query: Router.Query): void {
 		// Copy over query.
 		this.query = {};
 		for (const key in query) {
@@ -56,7 +56,7 @@ class Router {
 	}
 
 	/** Processes the URL query params and calls the callback. */
-	processURL() {
+	processURL(): void {
 		const urlSearchParams = new URLSearchParams(location.search);
 		this.query = {};
 		for (const entry of urlSearchParams.entries()) {
@@ -66,7 +66,7 @@ class Router {
 	}
 
 	/** Turns a query into a string suitable for a URL. */
-	private createQueryString(query: Router.Query) {
+	private createQueryString(query: Router.Query): string {
 		let queryString = '';
 		for (const key in query) {
 			if (query[key] === '') {
@@ -81,7 +81,7 @@ class Router {
 	}
 
 	/** Calls all of the callbacks with the current query. */
-	private callCallbacks() {
+	private callCallbacks(): void {
 		for (const callback of this.callbacks) {
 			callback(this.query);
 		}
@@ -91,7 +91,7 @@ class Router {
 namespace Router {
 	/** The query accepted by the router. */
 	export interface Query {
-		[key: string]: string
+		[key: string]: string;
 	}
 
 	/** The callback format when processing a query. */
