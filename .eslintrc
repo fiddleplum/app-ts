@@ -23,6 +23,7 @@
 		"no-constant-condition": "off",
 		"no-tabs": "off",
 		"no-trailing-spaces": "error",
+		"no-unused-vars": "error",
 		"operator-linebreak": ["error", "before"],
 		"quotes": ["error", "single"],
 		"semi": ["error", "always"],
@@ -33,6 +34,8 @@
 		}],
 		"yoda": "off",
 		"@typescript-eslint/no-namespace": "off",
+		"@typescript-eslint/no-empty-function": "off",
+		"@typescript-eslint/no-explicit-any": "off",
 		"@typescript-eslint/no-this-alias": "off",
 		"@typescript-eslint/strict-boolean-expressions": ["error", {
 		}]

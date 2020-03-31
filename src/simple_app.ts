@@ -39,11 +39,7 @@ class SimpleApp extends App {
 		this.pages.set(pageName, PageClass);
 	}
 
-	/**
-	 * Processes a query, loading a page.
-	 * @param {Object<string, string>} query
-	 * @private
-	 */
+	/** Processes a query, loading a page. */
 	private async _processQuery(query: Router.Query): Promise<void> {
 		const pageName = query.page !== undefined ? query.page : '';
 		const Page = this.pages.get(pageName);
