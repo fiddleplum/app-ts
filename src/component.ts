@@ -1,4 +1,4 @@
-import hasOwnProperty from './hasOwnProperty';
+import isIn from './is_in';
 
 /**
  * A base component from which other components can extend.
@@ -260,7 +260,7 @@ class Component {
 				let value: unknown;
 				if (attributeValue.startsWith('{{') && attributeValue.endsWith('}}')) {
 					attributeValue = attributeValue.substring(2, attributeValue.length - 2);
-					if (hasOwnProperty(this, attributeValue)) {
+					if (isIn(this, attributeValue)) {
 						value = this[attributeValue];
 						if (value instanceof Function) {
 							value = value.bind(this);
@@ -307,7 +307,7 @@ class Component {
 				// Get the event type without the 'on'.
 				const event = attribute.name.substring(2).toLowerCase();
 				// Get the callback.
-				if (hasOwnProperty(this, attribute.value)) {
+				if (isIn(this, attribute.value)) {
 					const handler = this[attribute.value];
 					if (handler === undefined || !(handler instanceof Function)) {
 						throw new Error('Could not find ' + event + ' handler ' + attribute.value + ' for element with id ' + element.id);
