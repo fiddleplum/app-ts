@@ -64,8 +64,8 @@ class Component {
 					this.setEventHandlersFromElemAttributes(node);
 
 					// Add the classes to the root element.
-					for (const ancestor of registryEntry.ancestors) {
-						node.classList.add(ancestor.constructor.name);
+					for (const ancestorEntries of registryEntry.ancestors) {
+						node.classList.add(ancestorEntries.ComponentType.name);
 					}
 				}
 			}
@@ -80,7 +80,7 @@ class Component {
 			if (ancestorEntry.css !== '') {
 				if (ancestorEntry.styleCount === 0) {
 					ancestorEntry.styleElem = document.createElement('style');
-					ancestorEntry.styleElem.id = ancestorEntry.constructor.name;
+					ancestorEntry.styleElem.id = ancestorEntry.ComponentType.name;
 					ancestorEntry.styleElem.innerHTML = ancestorEntry.css;
 					document.head.insertBefore(ancestorEntry.styleElem, lastStyleElem);
 				}
@@ -164,7 +164,7 @@ class Component {
 		this.components.add(newComponent);
 
 		// Connect the root nodes to the parentNode.
-		this.__connectRootNodes(parentNode, beforeChild);
+		newComponent.__connectRootNodes(parentNode, beforeChild);
 
 		// Set the reference, if there is one.
 		if (params.ref !== '') {

@@ -59,9 +59,13 @@ class SimpleApp extends App {
 		if (this.page !== null) {
 			this.__deleteComponent(this.page);
 		}
+		// Construct the params.
+		const params = new Component.Params();
+		params.attributes.set('app', this);
+
 		// Create and show new page.
 		if (pageElement instanceof HTMLElement) {
-			this.page = this.__insertComponent(Page, pageElement, null, new Component.Params());
+			this.page = this.__insertComponent(Page, pageElement, null, params);
 			await ShowHide.show(pageElement);
 		}
 	}
@@ -127,6 +131,8 @@ SimpleApp.css = `
 		transition: opacity .125s;
 	}
 	`;
+
+SimpleApp.register();
 
 App.setAppClass(SimpleApp);
 
