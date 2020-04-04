@@ -65,7 +65,7 @@ class WS {
 	}
 
 	/** Sends the JSON data along the web socket. Returns a promise resolving with response JSON data. */
-	send(data: any): Promise<void> {
+	send(data: any): Promise<any> {
 		// console.log('ws.send ' + JSON.stringify(data));
 		return new Promise((resolve, reject) => {
 			const id = this.uniqueIds.get();
