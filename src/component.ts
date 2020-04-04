@@ -124,16 +124,32 @@ class Component {
 		}
 	}
 
-	/** Gets the element with the reference or null if not found. */
-	__element(ref: string): Element | null {
+	/** Returns true if this has the element with the reference. */
+	__hasElement(ref: string): boolean {
+		return this.elementRefs.has(ref);
+	}
+
+	/** Gets the element with the reference. Throws a ReferenceError if not found. */
+	__element(ref: string): Element {
 		const element = this.elementRefs.get(ref);
-		return element !== undefined ? element : null;
+		if (element === undefined) {
+			throw new ReferenceError();
+		}
+		return element;
+	}
+
+	/** Returns true if this has the component with the reference. */
+	__hasComponent(ref: string): boolean {
+		return this.componentRefs.has(ref);
 	}
 
 	/** Gets the component with the reference or null if not found. */
-	__component(ref: string): Component | null {
+	__component(ref: string): Component {
 		const component = this.componentRefs.get(ref);
-		return component != undefined ? component : null;
+		if (component === undefined) {
+			throw new ReferenceError();
+		}
+		return component;
 	}
 
 	/** Sets the inner html for an referenced element. Cleans up tabs and newlines.
