@@ -273,7 +273,7 @@ class Component {
 			// Get the attributes.
 			for (const attribute of element.attributes) {
 				let attributeValue = attribute.value;
-				let value: unknown;
+				let value: unknown = attributeValue;
 				if (attributeValue.startsWith('{{') && attributeValue.endsWith('}}')) {
 					attributeValue = attributeValue.substring(2, attributeValue.length - 2);
 					if (isIn(this, attributeValue)) {
