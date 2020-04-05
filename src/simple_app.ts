@@ -72,9 +72,11 @@ class SimpleApp extends App {
 }
 
 SimpleApp.html = `
-	<div class="title"><a ref="title" href="."></a></div>
-	<div ref="message" class="message"></div>
-	<div ref="page" class="page"></div>
+	<div>
+		<div class="title"><a ref="title" href="."></a></div>
+		<div ref="message" class="message"></div>
+		<div ref="page" class="page"></div>
+	</div>
 	`;
 
 SimpleApp.css = `
@@ -82,6 +84,9 @@ SimpleApp.css = `
 		margin: 0;
 		width: 100%;
 		min-height: 100vh;
+	}
+	.SimpleApp {
+		width: 100%;
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		grid-template-rows: 2rem 1fr;
@@ -89,44 +94,44 @@ SimpleApp.css = `
 			"title message"
 			"page page";
 	}
-	.SimpleApp.title {
+	.SimpleApp .title {
 		grid-area: title;
 		padding: 0.25rem;
 		font-size: 1.5rem;
 		line-height: 1.5rem;
 	}
-	.SimpleApp.title a {
+	.SimpleApp .title a {
 		color: inherit;
 		text-decoration: none;
 	}
-	.SimpleApp#title a:hover {
+	.SimpleApp .title a:hover {
 		text-decoration: underline;
 	}
-	.SimpleApp.message {
+	.SimpleApp .message {
 		grid-area: message;
 		text-align: right;
 		line-height: 1rem;
 		padding: .5rem;
 	}
-	.SimpleApp.message a {
+	.SimpleApp .message a {
 		color: inherit;
 		text-decoration: none;
 	}
-	.SimpleApp.message a:hover {
+	.SimpleApp .message a:hover {
 		text-decoration: underline;
 	}
-	.SimpleApp.page {
+	.SimpleApp .page {
 		position: relative;
 		grid-area: page;
 		width: calc(100% - 2rem);
 		max-width: 50rem;
 		margin: 1rem auto 0 auto;
 	}
-	.SimpleApp.page.fadeOut {
+	.SimpleApp .page.fadeOut {
 		opacity: 0;
 		transition: opacity .125s;
 	}
-	.SimpleApp.page.fadeIn {
+	.SimpleApp .page.fadeIn {
 		opacity: 1;
 		transition: opacity .125s;
 	}

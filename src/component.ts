@@ -9,8 +9,8 @@ class Component {
 	/** The parent's reference to the component. */
 	private ref: string;
 
-	/** The root elements. */
-	private rootNodes: Node[] = [];
+	/** The root node. */
+	private root: Node;
 
 	/** The set of child components. */
 	private components: Set<Component> = new Set();
@@ -44,31 +44,32 @@ class Component {
 		// Set the reference that the parent has for this component.
 		this.ref = params.ref;
 
-		// Set the HTML of the root element.
-		if (registryEntry.html !== '') {
-			// Create the template and add the html content as the root node.
-			const templateElem = document.createElement('template');
-			templateElem.innerHTML = registryEntry.html;
-			this.rootNodes = [...templateElem.content.cloneNode(true).childNodes];
+		// Create the template and add the html content as the root node.
+		const templateElem = document.createElement('template');
+		templateElem.innerHTML = registryEntry.html;
+		if (templateElem.content.childNodes.length === 0) {
+			throw new Error('The component "' + this.constructor.name + '" must have one root in its html.');
+		}
+		if (templateElem.content.childNodes.length > 1) {
+			throw new Error('The component "' + this.constructor.name + '" may have only one root in its html.');
+		}
+		this.root = templateElem.content.cloneNode(true).childNodes[0];
+		if (!(this.root instanceof Element)) {
+			throw new Error('The component "' + this.constructor.name + '" root must be an HTML element.');
+		}
 
-			// Set the event handlers and child components.
-			for (const node of this.rootNodes) {
-				if (node instanceof Element) {
-					// Set the child components.
-					this.setComponents(node);
+		// Set the child components.
+		this.setComponents(this.root);
 
-					// Set the references.
-					this.setRefs(node);
+		// Set the references.
+		this.setRefs(this.root);
 
-					// Set the event handlers.
-					this.setEventHandlersFromElemAttributes(node);
+		// Set the event handlers.
+		this.setEventHandlersFromElemAttributes(this.root);
 
-					// Add the classes to the root element.
-					for (const ancestorEntries of registryEntry.ancestors) {
-						node.classList.add(ancestorEntries.ComponentType.name);
-					}
-				}
-			}
+		// Add the classes to the root element.
+		for (const ancestorEntries of registryEntry.ancestors) {
+			this.root.classList.add(ancestorEntries.ComponentType.name);
 		}
 
 		// Set the style element.
@@ -201,10 +202,8 @@ class Component {
 		this.components.delete(component);
 
 		// Remove the component's root nodes.
-		for (const node of component.rootNodes) {
-			if (node.parentNode !== null) {
-				node.parentNode.removeChild(node);
-			}
+		if (component.root.parentNode !== null) {
+			component.root.parentNode.removeChild(component.root);
 		}
 
 		// Call its destroy function.
@@ -215,13 +214,11 @@ class Component {
 	 * the child *beforeChild*. */
 	__connectRootNodes(parentNode: Node, beforeChild: Node | null): void {
 		// Connect the component to its parent.
-		for (const rootNode of this.rootNodes) {
-			if (beforeChild !== null) {
-				parentNode.insertBefore(rootNode, beforeChild);
-			}
-			else {
-				parentNode.appendChild(rootNode);
-			}
+		if (beforeChild !== null) {
+			parentNode.insertBefore(this.root, beforeChild);
+		}
+		else {
+			parentNode.appendChild(this.root);
 		}
 	}
 
@@ -305,11 +302,9 @@ class Component {
 	/** Unsets all of the components that are in the node. Used before setting new HTML. */
 	private unsetComponents(node: Node): void {
 		for (const component of this.components) {
-			for (const rootNode of component.rootNodes) {
-				if (node === rootNode || node.contains(rootNode)) {
-					this.__deleteComponent(component);
-					break;
-				}
+			if (node === this.root || node.contains(this.root)) {
+				this.__deleteComponent(component);
+				break;
 			}
 		}
 	}
