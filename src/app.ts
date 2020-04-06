@@ -18,7 +18,7 @@ export default class App extends Component {
 	/** Creates the app. */
 	static createApp(): void {
 		const app = new App.appClass();
-		app.__connectRootNodes(document.body, null);
+		document.body.appendChild(app.root);
 	}
 
 	/**
