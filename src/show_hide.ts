@@ -1,6 +1,10 @@
+interface ElementWithStyle extends Element {
+	style: CSSStyleDeclaration;
+}
+
 export default class ShowHide {
 	/** Shows an element in an animated way over the duration. The element must be a block display style. */
-	static async show(element: HTMLElement, durationInSeconds = 0.125): Promise<void> {
+	static async show(element: ElementWithStyle, durationInSeconds = 0.125): Promise<void> {
 		const fps = 30.0;
 		if (element.style.display === 'none') {
 			element.style.opacity = '0';
@@ -26,7 +30,7 @@ export default class ShowHide {
 	}
 
 	/** Hides an element in an animated way over the duration. The element must be a block display style. */
-	static async hide(element: HTMLElement, durationInSeconds = 0.125): Promise<void> {
+	static async hide(element: ElementWithStyle, durationInSeconds = 0.125): Promise<void> {
 		const fps = 30.0;
 		if (element.style.display !== 'none') {
 			element.style.opacity = '1';
@@ -52,7 +56,7 @@ export default class ShowHide {
 	}
 
 	/** Toggles an element in an animated way over the duration. The element must be a block display style. */
-	static async toggle(element: HTMLElement, durationInSeconds = 0.125): Promise<void> {
+	static async toggle(element: ElementWithStyle, durationInSeconds = 0.125): Promise<void> {
 		if (this.isShown(element)) {
 			return this.hide(element, durationInSeconds);
 		}
@@ -62,12 +66,12 @@ export default class ShowHide {
 	}
 
 	/** Returns true if this is shown or showing. */
-	static isShown(element: HTMLElement): boolean {
+	static isShown(element: ElementWithStyle): boolean {
 		return element.style.display !== 'none';
 	}
 
 	/** Returns true if this is hidden or hiding. */
-	static isHidden(element: HTMLElement): boolean {
+	static isHidden(element: ElementWithStyle): boolean {
 		return !this.isShown(element);
 	}
 }
