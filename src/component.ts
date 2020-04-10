@@ -325,11 +325,17 @@ class Component {
 			if (attribute.name.startsWith('on')) {
 				// Get the event type without the 'on'.
 				const event = attribute.name.substring(2).toLowerCase();
+				let attributeValue = attribute.value;
+				// Get the attribute value.
+				if (!attributeValue.startsWith('{{') || !attributeValue.endsWith('}}')) {
+					continue;
+				}
+				attributeValue = attributeValue.substring(2, attributeValue.length - 2);
 				// Get the callback.
-				if (isIn(this, attribute.value)) {
-					const handler = this[attribute.value];
+				if (isIn(this, attributeValue)) {
+					const handler = this[attributeValue];
 					if (handler === undefined || !(handler instanceof Function)) {
-						throw new Error('Could not find ' + event + ' handler ' + attribute.value + ' for element with id ' + element.id);
+						throw new Error('Could not find ' + event + ' handler ' + attributeValue + ' for element with id ' + element.id);
 					}
 					// Get the callback bound to this.
 					const boundHandler = handler.bind(this);
