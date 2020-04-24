@@ -31,7 +31,7 @@ export default class Icon extends Component {
 			const template = document.createElement('template');
 			template.innerHTML = text.trim();
 			if (template.content.children.length !== 1 || !(template.content.firstElementChild instanceof SVGElement)) {
-				throw new Error('The source ' + this._src + ' is not a vald .svg file.');
+				throw new Error('The source ' + this._src + ' is not a valid .svg file.');
 			}
 			const svg = template.content.firstElementChild;
 			// Remove the old children.

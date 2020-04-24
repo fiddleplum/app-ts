@@ -32,7 +32,7 @@ export default class App extends Component {
 	}
 }
 
-App.css = `
+App.css = /*css*/`
 	* {
 		box-sizing: border-box;
 	}
