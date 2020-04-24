@@ -27,10 +27,17 @@ class SimpleApp extends App {
 
 	/** Sets the message HTML. */
 	set message(message: string) {
-		console.log(message);
 		const messageElem = this.__element('message');
-		if (messageElem !== null) {
-			messageElem.innerHTML = message;
+		if (messageElem instanceof HTMLElement) {
+			if (message !== '') {
+				console.log(message);
+				messageElem.innerHTML = message;
+				messageElem.classList.add('active');
+			}
+			else {
+				messageElem.innerHTML = '';
+				messageElem.classList.remove('active');
+			}
 		}
 	}
 
@@ -44,13 +51,19 @@ class SimpleApp extends App {
 		const pageName = query.page !== undefined ? query.page : '';
 		const Page = this.pages.get(pageName);
 		if (Page === undefined) {
-			this.message = 'Page "' + pageName + '" not found. Return to <a href=".">home</a>.';
+			this.message = 'Page "' + pageName + '" not found.';
+			history.back();
 			return;
 		}
+
 		// If it's the same page, do nothing.
 		if (this.page !== null && this.page.constructor === Page) {
 			return;
 		}
+
+		// Clear any previous messages.
+		this.message = '';
+
 		// Hide and delete old page.
 		const pageElement = this.__element('page');
 		if (pageElement instanceof HTMLElement) {
@@ -71,7 +84,7 @@ class SimpleApp extends App {
 	}
 }
 
-SimpleApp.html = `
+SimpleApp.html = /*html*/`
 	<div>
 		<div class="title"><a ref="title" href="."></a></div>
 		<div ref="message" class="message"></div>
@@ -79,7 +92,7 @@ SimpleApp.html = `
 	</div>
 	`;
 
-SimpleApp.css = `
+SimpleApp.css = /*css*/`
 	body {
 		margin: 0;
 		width: 100%;
@@ -87,15 +100,8 @@ SimpleApp.css = `
 	}
 	.SimpleApp {
 		width: 100%;
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		grid-template-rows: 2rem 1fr;
-		grid-template-areas:
-			"title message"
-			"page page";
 	}
 	.SimpleApp .title {
-		grid-area: title;
 		padding: 0.25rem;
 		font-size: 1.5rem;
 		line-height: 1.5rem;
@@ -108,21 +114,23 @@ SimpleApp.css = `
 		text-decoration: underline;
 	}
 	.SimpleApp .message {
-		grid-area: message;
-		text-align: right;
 		line-height: 1rem;
+		padding: 0 .5rem;
+		height: 0;
+		opacity: 0;
+		transition: opacity .5s, height .5s, padding .5s;
+	}
+	.SimpleApp .message.active {
+		height: rem;
+		opacity: 100%;
 		padding: .5rem;
 	}
 	.SimpleApp .message a {
 		color: inherit;
 		text-decoration: none;
 	}
-	.SimpleApp .message a:hover {
-		text-decoration: underline;
-	}
 	.SimpleApp .page {
 		position: relative;
-		grid-area: page;
 		width: calc(100% - 2rem);
 		max-width: 50rem;
 		margin: 1rem auto 0 auto;
