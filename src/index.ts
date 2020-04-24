@@ -2,6 +2,7 @@ import App from './app';
 import SimpleApp from './simple_app';
 import Component from './component';
 // import Font from './font';
+import windowHierarchy from './window_hierarchy';
 import Icon from './icon';
 import isIn from './is_in';
 import Router from './router';
@@ -15,6 +16,7 @@ export {
 	SimpleApp,
 	Component,
 	// Font,
+	windowHierarchy,
 	Icon,
 	isIn,
 	Router,
