@@ -10,13 +10,13 @@ class Component {
 	private ref = '';
 
 	/** The root element. */
-	private _root: Element;
+	private _root: HTMLElement | SVGElement;
 
 	/** The set of child components. */
 	private _components: Set<Component> = new Set();
 
 	/** The mapping of references to elements. */
-	private _elementRefs: Map<string, Element> = new Map();
+	private _elementRefs: Map<string, HTMLElement | SVGElement> = new Map();
 
 	/** The mapping of references to child components. */
 	private _componentRefs: Map<string, Component> = new Map();
@@ -51,8 +51,8 @@ class Component {
 			throw new Error('The component "' + this.constructor.name + '" may have only one root in its html.');
 		}
 		const firstNode = templateElem.content.cloneNode(true).childNodes[0];
-		if (!(firstNode instanceof Element)) {
-			throw new Error('The component "' + this.constructor.name + '" root must be an HTML element.');
+		if (!(firstNode instanceof HTMLElement) && !(firstNode instanceof SVGElement)) {
+			throw new Error('The component "' + this.constructor.name + '" root must be an HTMLElement or an SVGElement.');
 		}
 		this._root = firstNode;
 
@@ -136,6 +136,7 @@ class Component {
 		}
 	}
 
+	/** Gets the root element. */
 	get root(): Element {
 		return this._root;
 	}
@@ -146,7 +147,7 @@ class Component {
 	}
 
 	/** Gets the element with the reference. Throws a ReferenceError if not found. */
-	__element(ref: string): Element {
+	__element(ref: string): HTMLElement | SVGElement {
 		const element = this._elementRefs.get(ref);
 		if (element === undefined) {
 			throw new ReferenceError();
@@ -178,7 +179,7 @@ class Component {
 		}
 		element.innerHTML = html;
 		for (const child of element.children) {
-			if (child instanceof Element) {
+			if (child instanceof HTMLElement || child instanceof SVGElement) {
 				this.setComponents(child);
 				this.setRefs(child);
 				this.setEventHandlersFromElemAttributes(child);
@@ -231,7 +232,7 @@ class Component {
 	}
 
 	/** Sets the refs for the element and its children. */
-	private setRefs(element: Element): void {
+	private setRefs(element: HTMLElement | SVGElement): void {
 		if (element.classList.contains('Component')) {
 			return; // Don't process child components.
 		}
@@ -243,7 +244,7 @@ class Component {
 			this._elementRefs.set(attribute.value, element);
 		}
 		for (const child of element.children) {
-			if (child instanceof Element) {
+			if (child instanceof HTMLElement || child instanceof SVGElement) {
 				this.setRefs(child);
 			}
 		}
