@@ -76,7 +76,7 @@ class Component {
 		this.setRefs(this._root);
 
 		// Set the event handlers.
-		this.setEventHandlersFromElemAttributes(this._root);
+		this.setEventHandlersFromElemAttributes(this._root, this);
 
 		// Add the classes to the root element.
 		for (const ancestorEntries of registryEntry.ancestors) {
@@ -104,7 +104,7 @@ class Component {
 		// If there is a ref element called content, this is where the content goes.
 		const contentElement = this._elementRefs.get('content');
 		if (contentElement !== undefined) {
-			this.__setHtml(contentElement, '');
+			this.__setHtml(contentElement, this, '');
 			for (const child of params.children) {
 				contentElement.appendChild(child);
 			}
@@ -113,9 +113,7 @@ class Component {
 		}
 	}
 
-	/**
-	 * Destroys this when it is no longer needed. Call to clean up the object.
-	 */
+	/** Destroys this when it is no longer needed. Call to clean up the object. */
 	__destroy(): void {
 		// Destroy all child components.
 		for (const component of this._components) {
@@ -170,8 +168,9 @@ class Component {
 	}
 
 	/** Sets the inner html for an referenced element. Cleans up tabs and newlines.
-	 * Cleans up old handlers and components and adds new handlers and components. */
-	__setHtml(element: Element, html: string): void {
+	 * Cleans up old handlers and components and adds new handlers and components.
+	 * It uses the context for resolving event handlers.*/
+	__setHtml(element: Element, context: Component, html: string): void {
 		html = html.replace(/[\t\n]+/g, '');
 		for (const child of element.children) {
 			this.unsetRefs(child);
@@ -182,7 +181,7 @@ class Component {
 			if (child instanceof HTMLElement || child instanceof SVGElement) {
 				this.setComponents(child);
 				this.setRefs(child);
-				this.setEventHandlersFromElemAttributes(child);
+				this.setEventHandlersFromElemAttributes(child, context);
 			}
 		}
 	}
@@ -319,8 +318,8 @@ class Component {
 	}
 
 	/** Sets the event handlers for all children of elem. Searches for all attributes starting with
-	 * 'on' and processes them. */
-	private setEventHandlersFromElemAttributes(element: Element): void {
+	 * 'on' and processes them, searching in the context component. */
+	private setEventHandlersFromElemAttributes(element: Element, context: Component): void {
 		const attributeNamesToRemove = [];
 		for (const attribute of element.attributes) {
 			if (attribute.name.startsWith('on')) {
@@ -333,13 +332,13 @@ class Component {
 				}
 				attributeValue = attributeValue.substring(2, attributeValue.length - 2);
 				// Get the callback.
-				if (isIn(this, attributeValue)) {
-					const handler = this[attributeValue];
+				if (isIn(context, attributeValue)) {
+					const handler = context[attributeValue];
 					if (handler === undefined || !(handler instanceof Function)) {
-						throw new Error('Could not find ' + event + ' handler ' + attributeValue + ' for element with id ' + element.id);
+						throw new Error(`Could not find ${event} handler ${attributeValue} in ${context.constructor.name} for element with id ${element.id}`);
 					}
 					// Get the callback bound to this.
-					const boundHandler = handler.bind(this);
+					const boundHandler = handler.bind(context);
 					// Remove the attribute so there's no conflict.
 					attributeNamesToRemove.push(attribute.name);
 					// Add the event listener.
@@ -352,7 +351,7 @@ class Component {
 			element.removeAttribute(attributeName);
 		}
 		for (const child of element.children) {
-			this.setEventHandlersFromElemAttributes(child);
+			this.setEventHandlersFromElemAttributes(child, context);
 		}
 	}
 
@@ -385,8 +384,10 @@ class Component {
 			throw new Error('A component named "' + this.name + '" is already registered.');
 		}
 
+		// Create the registry entry.
 		const entry = new Component.RegistryEntry(this);
 
+		// Include it as one of its ancestors.
 		entry.ancestors.push(entry);
 
 		// Populate the ancestors.
