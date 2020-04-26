@@ -102,7 +102,7 @@ SimpleApp.css = /*css*/`
 		width: 100%;
 	}
 	.SimpleApp .title {
-		padding: 0.25rem;
+		padding: 0.5rem;
 		font-size: 1.5rem;
 		line-height: 1.5rem;
 	}
@@ -115,15 +115,15 @@ SimpleApp.css = /*css*/`
 	}
 	.SimpleApp .message {
 		line-height: 1rem;
-		padding: 0 .5rem;
+		margin: 0 .5rem;
 		height: 0;
 		opacity: 0;
-		transition: opacity .5s, height .5s, padding .5s;
+		transition: opacity .5s, height .5s, margin .5s;
 	}
 	.SimpleApp .message.active {
-		height: rem;
+		height: 1rem;
 		opacity: 100%;
-		padding: .5rem;
+		margin: .5rem;
 	}
 	.SimpleApp .message a {
 		color: inherit;
@@ -131,9 +131,9 @@ SimpleApp.css = /*css*/`
 	}
 	.SimpleApp .page {
 		position: relative;
-		width: calc(100% - 2rem);
+		width: calc(100% - 1rem);
 		max-width: 50rem;
-		margin: 1rem auto 0 auto;
+		margin: .5rem auto .5rem auto;
 	}
 	.SimpleApp .page.fadeOut {
 		opacity: 0;
