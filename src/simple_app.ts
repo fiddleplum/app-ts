@@ -18,26 +18,28 @@ class SimpleApp extends App {
 	}
 
 	/** Sets the title HTML. */
-	set title(title: string) {
+	title(html: string): void {
 		const titleElem = this.__element('title');
-		if (titleElem !== null) {
-			titleElem.innerHTML = title;
-		}
+		titleElem.innerHTML = html;
+	}
+
+	/** Sets the nav HTML. It can include component references. */
+	nav(context: Component, html: string): void {
+		const elem = this.__element('nav');
+		this.__setHtml(elem, context, html);
 	}
 
 	/** Sets the message HTML. */
-	set message(message: string) {
+	message(message: string): void {
 		const messageElem = this.__element('message');
-		if (messageElem instanceof HTMLElement) {
-			if (message !== '') {
-				console.log(message);
-				messageElem.innerHTML = message;
-				messageElem.classList.add('active');
-			}
-			else {
-				messageElem.innerHTML = '';
-				messageElem.classList.remove('active');
-			}
+		if (message !== '') {
+			console.log(message);
+			messageElem.innerHTML = message;
+			messageElem.classList.add('active');
+		}
+		else {
+			messageElem.innerHTML = '';
+			messageElem.classList.remove('active');
 		}
 	}
 
@@ -51,7 +53,7 @@ class SimpleApp extends App {
 		const pageName = query.page !== undefined ? query.page : '';
 		const Page = this.pages.get(pageName);
 		if (Page === undefined) {
-			this.message = 'Page "' + pageName + '" not found.';
+			this.message('Page "' + pageName + '" not found.');
 			history.back();
 			return;
 		}
@@ -62,13 +64,11 @@ class SimpleApp extends App {
 		}
 
 		// Clear any previous messages.
-		this.message = '';
+		this.message('');
 
 		// Hide and delete old page.
 		const pageElement = this.__element('page');
-		if (pageElement instanceof HTMLElement) {
-			await ShowHide.hide(pageElement);
-		}
+		await ShowHide.hide(pageElement);
 		if (this.page !== null) {
 			this.__deleteComponent(this.page);
 		}
@@ -77,10 +77,8 @@ class SimpleApp extends App {
 		params.attributes.set('app', this);
 
 		// Create and show new page.
-		if (pageElement instanceof HTMLElement) {
-			this.page = this.__insertComponent(Page, pageElement, null, params);
-			await ShowHide.show(pageElement);
-		}
+		this.page = this.__insertComponent(Page, pageElement, null, params);
+		await ShowHide.show(pageElement);
 	}
 
 	/** Goes to the home page. */
@@ -91,7 +89,7 @@ class SimpleApp extends App {
 
 SimpleApp.html = /*html*/`
 	<div>
-		<div class="title"><a ref="title" onclick="{{_goToHome}}"></a></div>
+		<div class="title"><a ref="title" onclick="{{_goToHome}}"></a><span ref="nav"></span></div>
 		<div ref="message" class="message"></div>
 		<div ref="page" class="page"></div>
 	</div>
@@ -118,6 +116,10 @@ SimpleApp.css = /*css*/`
 	}
 	.SimpleApp .title a:hover {
 		text-decoration: underline;
+	}
+	.SimpleApp [ref="nav"] {
+		float: right;
+		text-align: right;
 	}
 	.SimpleApp .message {
 		line-height: 1rem;
