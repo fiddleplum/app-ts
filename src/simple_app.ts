@@ -82,11 +82,16 @@ class SimpleApp extends App {
 			await ShowHide.show(pageElement);
 		}
 	}
+
+	/** Goes to the home page. */
+	private _goToHome(): void {
+		this.router.pushQuery({});
+	}
 }
 
 SimpleApp.html = /*html*/`
 	<div>
-		<div class="title"><a ref="title" href="."></a></div>
+		<div class="title"><a ref="title" onclick="{{_goToHome}}"></a></div>
 		<div ref="message" class="message"></div>
 		<div ref="page" class="page"></div>
 	</div>
@@ -109,6 +114,7 @@ SimpleApp.css = /*css*/`
 	.SimpleApp .title a {
 		color: inherit;
 		text-decoration: none;
+		cursor: pointer;
 	}
 	.SimpleApp .title a:hover {
 		text-decoration: underline;

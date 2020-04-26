@@ -150,7 +150,7 @@ class Component {
 	__element(ref: string): HTMLElement | SVGElement {
 		const element = this._elementRefs.get(ref);
 		if (element === undefined) {
-			throw new ReferenceError();
+			throw new ReferenceError(`The element "${ref}" could not be found.`);
 		}
 		return element;
 	}
