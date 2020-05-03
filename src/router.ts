@@ -15,7 +15,7 @@ class Router {
 	}
 
 	/** Gets value of the given URL query key. */
-	getValue(key: string): string {
+	getValue(key: string): string | undefined {
 		return this.query[key];
 	}
 

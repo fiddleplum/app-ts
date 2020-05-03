@@ -418,7 +418,7 @@ namespace Component {
 		/** The reference of the component, if it has one. */
 		public ref = '';
 
-		/** The attributes passed as if it were <Component attrib=''...>. */
+		/** The attributes passed as if it were <Component attrib=''...>. All of the keys are lower case. */
 		public attributes: Map<string, unknown> = new Map();
 
 		/** The children of the node as if it were <Component><child1/>...</Component>. */
