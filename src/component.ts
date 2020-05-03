@@ -73,7 +73,11 @@ class Component {
 		this.setComponents(this._root);
 
 		// Set the references.
-		this.setRefs(this._root);
+		for (const child of this._root.children) {
+			if (child instanceof HTMLElement || child instanceof SVGElement) {
+				this.setRefs(child);
+			}
+		}
 
 		// Set the event handlers.
 		this.setEventHandlersFromElemAttributes(this._root, this);
