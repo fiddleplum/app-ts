@@ -143,6 +143,17 @@ class Component {
 		return this._root;
 	}
 
+	toString(): string {
+		const componentName = this.constructor.name;
+		const ref = this.root.getAttribute('ref');
+		if (ref !== null) {
+			return componentName + ' ref:' + ref;
+		}
+		else {
+			return componentName;
+		}
+	}
+
 	/** Returns true if this has the element with the reference. */
 	__hasElement(ref: string): boolean {
 		return this._elementRefs.has(ref);
@@ -162,7 +173,7 @@ class Component {
 		return this._componentRefs.has(ref);
 	}
 
-	/** Gets the component with the reference or null if not found. */
+	/** Gets the component with the reference. Throws a ReferenceError if not found. */
 	__component(ref: string): Component {
 		const component = this._componentRefs.get(ref);
 		if (component === undefined) {
@@ -251,9 +262,6 @@ class Component {
 
 	/** Sets the refs for the element and its children. */
 	private setRefs(element: HTMLElement | SVGElement): void {
-		if (element.classList.contains('Component')) {
-			return; // Don't process child components.
-		}
 		const attribute = element.attributes.getNamedItem('ref');
 		if (attribute !== null) {
 			if (this._elementRefs.has(attribute.value)) {
@@ -261,9 +269,12 @@ class Component {
 			}
 			this._elementRefs.set(attribute.value, element);
 		}
-		for (const child of element.children) {
-			if (child instanceof HTMLElement || child instanceof SVGElement) {
-				this.setRefs(child);
+		// Check the children if this element isn't a component.
+		if (!element.classList.contains('Component')) {
+			for (const child of element.children) {
+				if (child instanceof HTMLElement || child instanceof SVGElement) {
+					this.setRefs(child);
+				}
 			}
 		}
 	}
