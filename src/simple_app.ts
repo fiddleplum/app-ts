@@ -159,7 +159,7 @@ App.setAppClass(SimpleApp);
 
 namespace SimpleApp {
 	export class Page extends Component {
-		public readonly app: SimpleApp;
+		private _app: SimpleApp;
 
 		constructor(params: Component.Params) {
 			super(params);
@@ -168,7 +168,11 @@ namespace SimpleApp {
 			if (!(app instanceof SimpleApp)) {
 				throw new Error('While constructing page ' + this.constructor.name + ', app is not a SimpleApp.');
 			}
-			this.app = app;
+			this._app = app;
+		}
+
+		public get app(): SimpleApp {
+			return this._app;
 		}
 	}
 }
