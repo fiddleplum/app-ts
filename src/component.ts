@@ -175,17 +175,32 @@ class Component {
 	 * Cleans up old handlers and components and adds new handlers and components.
 	 * It uses the context for resolving event handlers.*/
 	__setHtml(element: Element, context: Component, html: string): void {
-		html = html.replace(/[\t\n]+/g, '');
 		for (const child of element.children) {
-			this.unsetRefs(child);
-			this.unsetComponents(child);
+			this.__removeElement(child);
 		}
-		element.innerHTML = html;
-		for (const child of element.children) {
-			if (child instanceof HTMLElement || child instanceof SVGElement) {
-				this.setComponents(child);
-				this.setRefs(child);
-				this.setEventHandlersFromElemAttributes(child, context);
+		element.innerHTML = '';
+		this.__insertHtml(element, null, context, html);
+	}
+
+	/** Removes an element. */
+	__removeElement(element: Element): void {
+		this.unsetRefs(element);
+		this.unsetComponents(element);
+		element.parentNode?.removeChild(element);
+	}
+
+	/** Inserts html at the end of the parent or before a child node. */
+	__insertHtml(parent: Element, before: Node | null, context: Component, html: string): void {
+		html = html.replace(/[\t\n]+/g, '');
+		const templateElem = document.createElement('template');
+		templateElem.innerHTML = html;
+		for (const child of templateElem.content.childNodes) {
+			const newNode = child.cloneNode(true);
+			parent.insertBefore(newNode, before);
+			if (newNode instanceof HTMLElement || newNode instanceof SVGElement) {
+				this.setComponents(newNode);
+				this.setRefs(newNode);
+				this.setEventHandlersFromElemAttributes(newNode, context);
 			}
 		}
 	}
@@ -297,8 +312,8 @@ class Component {
 			// Get the grandchildren.
 			for (const child of element.childNodes) {
 				params.children.push(child);
-				element.removeChild(child);
 			}
+			element.innerHTML = '';
 			if (element.parentNode !== null) {
 				this.__insertComponent(registryEntry.ComponentType, element.parentNode, element, params);
 				element.parentNode.removeChild(element);
