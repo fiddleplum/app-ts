@@ -12,7 +12,7 @@ export class ShowHide {
 			element.style.display = '';
 			element.setAttribute('showing', '1');
 			return new Promise((resolve) => {
-				const timer = setInterval((elem) => {
+				const timer = setInterval((elem: ElementWithStyle) => {
 					let u = Number.parseFloat(elem.style.opacity);
 					u += 1.0 / (durationInSeconds * fps);
 					u = Math.min(u, 1.0);

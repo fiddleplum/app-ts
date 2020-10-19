@@ -19,7 +19,7 @@ export class SimpleApp extends App {
 
 	/** Sets the title HTML. */
 	title(html: string): void {
-		const titleElem = this.element('title', HTMLAnchorElement);
+		const titleElem = this.element('title', HTMLDivElement).querySelector('a')!;
 		titleElem.innerHTML = html;
 	}
 
@@ -88,11 +88,9 @@ export class SimpleApp extends App {
 }
 
 SimpleApp.html = /*html*/`
-	<div>
-		<div class="title"><a ref="title" onclick="{{_goToHome}}"></a><span ref="nav"></span></div>
-		<div ref="message" class="message"></div>
-		<div ref="page" class="page"></div>
-	</div>
+	<div id="title"><a onclick="{$_goToHome$}"></a><span id="nav"></span></div>
+	<div id="message"></div>
+	<div id="page"></div>
 	`;
 
 SimpleApp.css = /*css*/`
@@ -101,53 +99,50 @@ SimpleApp.css = /*css*/`
 		width: 100%;
 		min-height: 100vh;
 	}
-	.SimpleApp {
-		width: 100%;
-	}
-	.SimpleApp .title {
+	.SimpleApp#title {
 		padding: 0.5rem;
 		font-size: 1.5rem;
 		line-height: 1.5rem;
 	}
-	.SimpleApp .title a {
+	.SimpleApp#title a {
 		color: inherit;
 		text-decoration: none;
 		cursor: pointer;
 	}
-	.SimpleApp .title a:hover {
+	.SimpleApp#title a:hover {
 		text-decoration: underline;
 	}
-	.SimpleApp [ref="nav"] {
+	.SimpleApp#nav {
 		float: right;
 		text-align: right;
 	}
-	.SimpleApp .message {
+	.SimpleApp#message {
 		line-height: 1rem;
 		margin: 0 .5rem;
 		height: 0;
 		opacity: 0;
 		transition: opacity .5s, height .5s, margin .5s;
 	}
-	.SimpleApp .message.active {
+	.SimpleApp#message.active {
 		height: 1rem;
 		opacity: 100%;
 		margin: .5rem;
 	}
-	.SimpleApp .message a {
+	.SimpleApp#message a {
 		color: inherit;
 		text-decoration: none;
 	}
-	.SimpleApp .page {
+	.SimpleApp#page {
 		position: relative;
 		width: calc(100% - 1rem);
 		max-width: 50rem;
 		margin: .5rem auto .5rem auto;
 	}
-	.SimpleApp .page.fadeOut {
+	.SimpleApp#page.fadeOut {
 		opacity: 0;
 		transition: opacity .125s;
 	}
-	.SimpleApp .page.fadeIn {
+	.SimpleApp#page.fadeIn {
 		opacity: 1;
 		transition: opacity .125s;
 	}

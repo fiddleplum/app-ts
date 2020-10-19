@@ -28,6 +28,7 @@ export class Component {
 			// Set the id to element mapping of the root and its children.
 			if (root instanceof Element) {
 				this.setIds(root);
+				this.setEventHandlersFromElemAttributes(root);
 
 				// Add the classes to the root element.
 				for (const ancestorEntries of registryEntry.ancestors) {
@@ -128,7 +129,7 @@ export class Component {
 			throw new ReferenceError(`The element with id "${id}" could not be found.`);
 		}
 		if (!(element instanceof Type)) {
-			throw new ReferenceError(`The element with id "${id} is not of type ${Type.constructor.name}`);
+			throw new ReferenceError(`The element with id "${id}" is not of type ${Type.constructor.name}`);
 		}
 		return element;
 	}
@@ -145,7 +146,7 @@ export class Component {
 			throw new ReferenceError(`The component with id "${id}" could not be found.`);
 		}
 		if (!(component instanceof Type)) {
-			throw new ReferenceError(`The component with id "${id} is not of type ${Type.constructor.name}`);
+			throw new ReferenceError(`The component with id "${id}" is not of type ${Type.constructor.name}`);
 		}
 		return component;
 	}
