@@ -1,25 +1,24 @@
 {
-	"name": "@fiddleplum/app-js",
+	"name": "@fiddleplum/elm-app",
 	"version": "1.0.0",
-	"description": "AppJS",
-	"private": false,
+	"description": "Elm App",
+	"private": true,
 	"scripts": {
-		"setup": "yarn install; mkdir -p dist; cp www/config.example.js dist/config.js",
+		"setup": "yarn install; mkdir -p dist",
 		"update": "yarn install --no-default-rc",
-		"rsync_www": "mkdir -p dist; rsync -r --delete --exclude=\"config.js\" --exclude=\"config.example.js\" www/ dist/",
-		"build": "yarn rsync_www; webpack --config webpack.dev.js",
-		"build-production": "yarn rsync_www; webpack --config webpack.prod.js"
+		"build": "webpack --config webpack.dev.js",
+		"build-production": "webpack --config webpack.prod.js"
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/fiddleplum/app-js.git"
+		"url": "git+https://github.com/fiddleplum/elm-app.git"
 	},
-	"author": "Stephen Hurley",
-	"license": "MIT",
+	"author": "Stephen O'Rourley",
+	"license": "ISC",
 	"bugs": {
-		"url": "https://github.com/fiddleplum/app-js/issues"
+		"url": "https://github.com/fiddleplum/elm-app/issues"
 	},
-	"homepage": "https://github.com/fiddleplum/app-js",
+	"homepage": "https://github.com/fiddleplum/elm-app",
 	"devDependencies": {
 		"eslint": "latest",
 		"@typescript-eslint/parser": "latest",

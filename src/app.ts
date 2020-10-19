@@ -1,14 +1,8 @@
-import Component from './component';
-import Router from './router';
+import { Component } from './component';
+import { Router } from './router';
 
 /** A very simple scaffolding for apps. */
-export default class App extends Component {
-	/** The router system. */
-	public readonly router: Router = new Router();
-
-	/** The subclass of App to be instantiated. */
-	private static appClass: typeof App = App;
-
+export class App extends Component {
 	/** Sets the subclass of App to be instantiated. It should be called in the main script,
 	 * outside of any function. */
 	static setAppClass(appClass: typeof App): void {
@@ -17,8 +11,10 @@ export default class App extends Component {
 
 	/** Creates the app. */
 	static createApp(): void {
+		// Create the app object.
 		const app = new App.appClass();
-		document.body.appendChild(app.root);
+		// Create the child components now that the app has been constructed, along with its variables.
+		app.createChildComponents();
 	}
 
 	/**
@@ -27,9 +23,20 @@ export default class App extends Component {
 	constructor() {
 		super(new Component.Params());
 
-		// Make this global.
+		// Append the roots to the document body.
+		for (let i = 0; i < this.roots().length; i++) {
+			document.body.appendChild(this.roots()[i]);
+		}
+
+		// Make the app global.
 		window.app = this;
 	}
+
+	/** The router system. */
+	public readonly router: Router = new Router();
+
+	/** The subclass of App to be instantiated. */
+	private static appClass: typeof App = App;
 }
 
 App.css = /*css*/`
@@ -52,14 +59,17 @@ App.css = /*css*/`
 	}
 	`;
 
+// Register the app class.
 App.register();
 
+// Typing to ensure TypeScript is happy with the app global.
 declare global {
 	interface Window {
 		app: App;
 	}
 }
 
+// Once the window 'load' event has been triggered, construct the app.
 window.addEventListener('load', () => {
 	try {
 		App.createApp();

@@ -1,38 +1,12 @@
-import isIn from './is_in';
+import { isIn } from './is_in';
 
 /**
  * A base component from which other components can extend.
- * Each subclass can have an `html` and a `style` property to add style to the components.
+ * Each subclass can have an `html` and a `css` property to add content and style to the components.
  * Only the most derived subclass's `html` property will be used.
  */
-class Component {
-	/** The parent's reference to the component. */
-	private ref = '';
-
-	/** The root element. */
-	private _root: HTMLElement | SVGElement;
-
-	/** The set of child components. */
-	private _components: Set<Component> = new Set();
-
-	/** The mapping of references to elements. */
-	private _elementRefs: Map<string, HTMLElement | SVGElement> = new Map();
-
-	/** The mapping of references to child components. */
-	private _componentRefs: Map<string, Component> = new Map();
-
-	/** The registry entry. */
-	private _registryEntry: Component.RegistryEntry;
-
-	/** The registered components, mapped from string to Component type. */
-	private static _registry: Map<string, Component.RegistryEntry> = new Map();
-
-	/** The HTML that goes with the component. */
-	public static html = '';
-
-	/** The CSS that goes with the component. */
-	public static css = '';
-
+export class Component {
+	/** Creates the component. */
 	constructor(params: Component.Params) {
 		// Make sure the component is registered.
 		const registryEntry = Component._registry.get(this.constructor.name.toLowerCase());
@@ -41,50 +15,25 @@ class Component {
 		}
 		this._registryEntry = registryEntry;
 
-		// Create the template and add the html content as the root node.
+		// Set the id.
+		this._id = params.id;
+
+		// Create the template and add the html content as the root nodes.
 		const templateElem = document.createElement('template');
 		templateElem.innerHTML = registryEntry.html;
-		if (templateElem.content.childNodes.length === 0) {
-			throw new Error('The component "' + this.constructor.name + '" must have one root in its html.');
-		}
-		if (templateElem.content.childNodes.length > 1) {
-			throw new Error('The component "' + this.constructor.name + '" may have only one root in its html.');
-		}
-		const firstNode = templateElem.content.cloneNode(true).childNodes[0];
-		if (!(firstNode instanceof HTMLElement) && !(firstNode instanceof SVGElement)) {
-			throw new Error('The component "' + this.constructor.name + '" root must be an HTMLElement or an SVGElement.');
-		}
-		this._root = firstNode;
+		this._roots = [...templateElem.content.cloneNode(true).childNodes];
 
-		// Set the ref attribute.
-		const refAttribute = params.attributes.get('ref');
-		if (typeof refAttribute === 'string') {
-			this.ref = refAttribute;
-			this._root.setAttribute('ref', refAttribute);
-		}
+		// Setup the root nodes.
+		for (const root of this._roots) {
+			// Set the id to element mapping of the root and its children.
+			if (root instanceof Element) {
+				this.setIds(root);
 
-		// Set the style attributes.
-		const styleAttribute = params.attributes.get('style');
-		if (typeof styleAttribute === 'string') {
-			this._root.setAttribute('style', styleAttribute);
-		}
-
-		// Set the child components.
-		this.setComponents(this._root);
-
-		// Set the references.
-		for (const child of this._root.children) {
-			if (child instanceof HTMLElement || child instanceof SVGElement) {
-				this.setRefs(child);
+				// Add the classes to the root element.
+				for (const ancestorEntries of registryEntry.ancestors) {
+					root.classList.add(ancestorEntries.ComponentType.name);
+				}
 			}
-		}
-
-		// Set the event handlers.
-		this.setEventHandlersFromElemAttributes(this._root, this);
-
-		// Add the classes to the root element.
-		for (const ancestorEntries of registryEntry.ancestors) {
-			this._root.classList.add(ancestorEntries.ComponentType.name);
 		}
 
 		// Set the style element.
@@ -94,34 +43,46 @@ class Component {
 
 			// Create the ancestor's style element if it doesn't already exist, and increment the use count.
 			if (ancestorEntry.css !== '') {
-				if (ancestorEntry.styleCount === 0) {
+				if (ancestorEntry.styleElemUseCount === 0) {
 					ancestorEntry.styleElem = document.createElement('style');
 					ancestorEntry.styleElem.id = ancestorEntry.ComponentType.name;
 					ancestorEntry.styleElem.innerHTML = ancestorEntry.css;
 					document.head.insertBefore(ancestorEntry.styleElem, lastStyleElem);
 				}
-				ancestorEntry.styleCount += 1;
+				ancestorEntry.styleElemUseCount += 1;
 				lastStyleElem = ancestorEntry.styleElem;
 			}
 		}
+	}
 
-		// If there is a ref element called content, this is where the content goes.
-		const contentElement = this._elementRefs.get('content');
-		if (contentElement !== undefined) {
-			this.__setHtml(contentElement, this, '');
-			for (const child of params.children) {
-				contentElement.appendChild(child);
+	/** Creates any child components in the HTML. It's separate from the constructor, because
+	 * the subclass needs to have its variables set for the child component attributes. */
+	protected createChildComponents(): void {
+		for (let i = 0; i < this._roots.length; i++) {
+			const root = this._roots[i];
+			if (root instanceof HTMLElement) {
+				// If the root or its children are components, create them.
+				const newRoots = this.setComponents(root);
+
+				// If new roots were created, replace the old root with them, and add on the old root's classes.
+				if (newRoots !== undefined) {
+					this._roots.splice(i, 1, ...newRoots);
+					for (const newRoot of newRoots) {
+						if (newRoot instanceof Element) {
+							newRoot.classList.add(...root.classList);
+						}
+					}
+					i += newRoots.length - 1;
+				}
 			}
-			this.setRefs(contentElement);
-			this.setComponents(contentElement);
 		}
 	}
 
-	/** Destroys this when it is no longer needed. Call to clean up the object. */
-	__destroy(): void {
-		// Destroy all child components.
+	/** Destroys the component when it is no longer needed. Call to clean up the object. */
+	protected destroy(): void {
+		// Destroy all of the child components.
 		for (const component of this._components) {
-			component.__destroy();
+			component.destroy();
 		}
 
 		// Remove the style elements of the component and its ancestors.
@@ -129,8 +90,8 @@ class Component {
 			// Decrement the use count of the ancestor's style element and remove it if the use count is zero.
 			const ancestorEntry = this._registryEntry.ancestors[i];
 			if (ancestorEntry.styleElem !== null) {
-				ancestorEntry.styleCount -= 1;
-				if (ancestorEntry.styleCount === 0) {
+				ancestorEntry.styleElemUseCount -= 1;
+				if (ancestorEntry.styleElemUseCount === 0) {
 					document.head.removeChild(ancestorEntry.styleElem);
 					ancestorEntry.styleElem = null;
 				}
@@ -138,250 +99,283 @@ class Component {
 		}
 	}
 
-	/** Gets the root element. */
-	get root(): Element {
-		return this._root;
-	}
-
+	/** Returns a string form of the component. */
 	toString(): string {
 		const componentName = this.constructor.name;
-		const ref = this.root.getAttribute('ref');
-		if (ref !== null) {
-			return componentName + ' ref:' + ref;
+		const id = this._id;
+		if (id !== '') {
+			return componentName + ' id:' + id;
 		}
 		else {
 			return componentName;
 		}
 	}
 
-	/** Returns true if this has the element with the reference. */
-	__hasElement(ref: string): boolean {
-		return this._elementRefs.has(ref);
+	/** Returns the root elements. */
+	protected roots(): Node[] {
+		return this._roots;
 	}
 
-	/** Gets the element with the reference. Throws a ReferenceError if not found. */
-	__element(ref: string): HTMLElement | SVGElement {
-		const element = this._elementRefs.get(ref);
+	/** Returns true if this has an element with the id. */
+	protected hasElement(id: string): boolean {
+		return this._idsToElements.has(id);
+	}
+
+	/** Gets the element with the id. Throws a ReferenceError if not found. */
+	protected element<Type extends Element>(id: string, Type: { new (...args: any[]): Type }): Type {
+		const element = this._idsToElements.get(id);
 		if (element === undefined) {
-			throw new ReferenceError(`The element "${ref}" could not be found.`);
+			throw new ReferenceError(`The element with id "${id}" could not be found.`);
+		}
+		if (!(element instanceof Type)) {
+			throw new ReferenceError(`The element with id "${id} is not of type ${Type.constructor.name}`);
 		}
 		return element;
 	}
 
-	/** Returns true if this has the component with the reference. */
-	__hasComponent(ref: string): boolean {
-		return this._componentRefs.has(ref);
+	/** Returns true if this has an component with the id. */
+	protected hasComponent(id: string): boolean {
+		return this._idsToComponents.has(id);
 	}
 
-	/** Gets the component with the reference. Throws a ReferenceError if not found. */
-	__component(ref: string): Component {
-		const component = this._componentRefs.get(ref);
+	/** Gets the component with the id. Throws a ReferenceError if not found. */
+	protected component<Type extends Component>(id: string, Type: { new (params: Component.Params): Type }): Type {
+		const component = this._idsToComponents.get(id);
 		if (component === undefined) {
-			throw new ReferenceError();
+			throw new ReferenceError(`The component with id "${id}" could not be found.`);
+		}
+		if (!(component instanceof Type)) {
+			throw new ReferenceError(`The component with id "${id} is not of type ${Type.constructor.name}`);
 		}
 		return component;
 	}
 
-	/** Sets the inner html for an referenced element. Cleans up tabs and newlines.
-	 * Cleans up old handlers and components and adds new handlers and components.
-	 * It uses the context for resolving event handlers.*/
-	__setHtml(element: Element, context: Component, html: string): void {
+	/** Sets the inner html for an element. Cleans up tabs and newlines in the HTML.
+	 * Cleans up old id, handlers, and components and adds new id, handlers, and components. */
+	protected setHtml(element: Element, html: string): void {
 		for (const child of element.children) {
-			this.__removeElement(child);
+			this.removeElement(child);
 		}
 		element.innerHTML = '';
-		this.__insertHtml(element, null, context, html);
+		this.insertHtml(element, null, html);
 	}
 
 	/** Removes an element. */
-	__removeElement(element: Element): void {
-		this.unsetRefs(element);
+	protected removeElement(element: Element): void {
+		this.unsetIds(element);
 		this.unsetComponents(element);
 		element.parentNode?.removeChild(element);
 	}
 
 	/** Inserts html at the end of the parent or before a child node. */
-	__insertHtml(parent: Element, before: Node | null, context: Component, html: string): void {
-		html = html.replace(/[\t\n]+/g, '');
+	protected insertHtml(parent: Element, before: Node | null, html: string): void {
+		html = html.replace(/>[\t\n]+</g, '><');
 		const templateElem = document.createElement('template');
 		templateElem.innerHTML = html;
 		for (const child of templateElem.content.childNodes) {
 			const newNode = child.cloneNode(true);
 			parent.insertBefore(newNode, before);
-			if (newNode instanceof HTMLElement || newNode instanceof SVGElement) {
+			if (newNode instanceof Element) {
+				this.setIds(newNode);
+				this.setEventHandlersFromElemAttributes(newNode);
 				this.setComponents(newNode);
-				this.setRefs(newNode);
-				this.setEventHandlersFromElemAttributes(newNode, context);
 			}
 		}
 	}
 
 	/** Sets a new component of type *ComponentType* as a child of *parentNode* right before
 	 * the child *beforeChild* using the *params*. */
-	__insertComponent<T extends Component>(ComponentType: new (params: Component.Params) => T, parentNode: Node, beforeChild: Node | null, params: Component.Params): T {
+	protected insertComponent<T extends Component>(ComponentType: new (params: Component.Params) => T, parentNode: Node, beforeChild: Node | null, params: Component.Params): T {
 		// Create the component.
 		const newComponent = new ComponentType(params);
-
+		// Create any child components that are within the html of the component.
+		newComponent.createChildComponents();
+		// For each root in the new component,
+		for (let i = 0; i < newComponent._roots.length; i++) {
+			// Set the event handlers for the roots if they are elements.
+			// It happens after the child components have been created, because the root nodes may have changed.
+			const root = newComponent._roots[i];
+			if (root instanceof Element) {
+				newComponent.setEventHandlersFromElemAttributes(root);
+			}
+			// Insert the new component root in the right spot of this component.
+			parentNode.insertBefore(root, beforeChild);
+		}
 		// Add it to the list of components.
 		this._components.add(newComponent);
-
-		// Connect the root nodes to the parentNode.
-		if (beforeChild !== null) {
-			parentNode.insertBefore(newComponent._root, beforeChild);
-		}
-		else {
-			parentNode.appendChild(newComponent._root);
-		}
-
-		// Set the reference, if there is one.
-		if (params.ref !== '') {
-			this._componentRefs.set(params.ref, newComponent);
+		// Set the id, if there is one.
+		if (params.id !== '') {
+			this._idsToComponents.set(params.id, newComponent);
 		}
 		return newComponent;
 	}
 
-	/** Deletes the referenced component. Does nothing if it isn't found. */
-	__deleteComponent(component: Component): void {
+	/** Deletes the component. Does nothing if it isn't found. */
+	protected deleteComponent(component: Component): void {
 		if (!this._components.has(component)) {
 			return;
 		}
 		// Delete the component from the lists.
-		if (component.ref !== '') {
-			this._componentRefs.delete(component.ref);
+		if (component._id !== '') {
+			this._idsToComponents.delete(component._id);
 		}
 		this._components.delete(component);
 
 		// Remove the component's root nodes.
-		if (component._root.parentNode !== null) {
-			component._root.parentNode.removeChild(component._root);
+		for (let i = 0; i < component._roots.length; i++) {
+			component._roots[i].parentNode?.removeChild(component._roots[i]);
 		}
 
 		// Call its destroy function.
-		component.__destroy();
+		component.destroy();
 	}
 
-	/** Sets the refs for the element and its children. */
-	private setRefs(element: HTMLElement | SVGElement): void {
-		const attribute = element.attributes.getNamedItem('ref');
-		if (attribute !== null) {
-			if (this._elementRefs.has(attribute.value)) {
-				throw new Error('The element ref "' + attribute.value + '" has already been used.');
-			}
-			this._elementRefs.set(attribute.value, element);
+	/** Sets the ids for the element and its children, excluding components. */
+	private setIds(element: Element): void {
+		// Don't process child components.
+		if (element.classList.contains('Component')) {
+			return;
 		}
-		// Check the children if this element isn't a component.
-		if (!element.classList.contains('Component')) {
-			for (const child of element.children) {
-				if (child instanceof HTMLElement || child instanceof SVGElement) {
-					this.setRefs(child);
-				}
-			}
+		// Set the id to element mapping.
+		if (element.id !== undefined && element.id !== '') {
+			this._idsToElements.set(element.id, element);
+		}
+		// Check the children of this element.
+		for (const child of element.children) {
+			this.setIds(child);
 		}
 	}
 
-	/** Unsets the refs for the node and its children. */
-	private unsetRefs(element: Element): void {
+	/** Unsets the ids for the node and its children, excluding components.. */
+	private unsetIds(element: Element): void {
 		if (element.classList.contains('Component')) {
 			return; // Don't process child components.
 		}
-		const attribute = element.attributes.getNamedItem('ref');
-		if (attribute !== null) {
-			this._elementRefs.delete(attribute.value);
+		if (element.id !== undefined && element.id !== '') {
+			this._idsToElements.delete(element.id);
 		}
 		for (const child of element.children) {
-			this.unsetRefs(child);
+			this.unsetIds(child);
 		}
 	}
 
 	/** Goes through all of the tags, and for any that match a component in the registry, sets it with
 	 * the matching component. Goes through all of the children also. */
-	private setComponents(element: Element): void {
+	private setComponents(element: Element): Node[] {
 		const registryEntry = Component._registry.get(element.tagName.toLowerCase());
+		// The element is a component ready to be instantiated.
 		if (registryEntry !== undefined) {
+			// Create the params.
 			const params = new Component.Params();
-			// Get the reference id.
-			const refAttribute = element.attributes.getNamedItem('ref');
 
-			if (refAttribute !== null) {
-				params.ref = refAttribute.value;
-			}
+			// Set the id.
+			params.id = element.id;
+
 			// Get the attributes.
 			for (const attribute of element.attributes) {
+				const attributeName = attribute.name.toLowerCase();
 				let attributeValue = attribute.value;
 				let value: unknown = attributeValue;
-				if (attributeValue.startsWith('{{') && attributeValue.endsWith('}}')) {
+				if (attributeValue.startsWith('{$') && attributeValue.endsWith('$}')) {
 					attributeValue = attributeValue.substring(2, attributeValue.length - 2);
+					const valueAsNumber = parseFloat(attributeValue);
+					if (!isNaN(valueAsNumber)) {
+						value = valueAsNumber;
+					}
+					else if (attributeValue === 'false') {
+						value = false;
+					}
+					else if (attributeValue === 'true') {
+						value = true;
+					}
 					if (isIn(this, attributeValue)) {
 						value = this[attributeValue];
 						if (value instanceof Function) {
 							value = value.bind(this);
 						}
 					}
+					else {
+						throw new Error(`Could not find value for attribute ${attribute.name}=${attribute.value} for element with id ${element.id}.`);
+					}
 				}
-				params.attributes.set(attribute.name, value);
+				else if (attributeValue.startsWith('{J') && attributeValue.endsWith('J}')) {
+					attributeValue = attributeValue.substring(2, attributeValue.length - 2);
+					try {
+						value = JSON.parse(attributeValue);
+					}
+					catch (error) {
+						throw new Error(`Could not parse JSON attribute ${attribute.name}=${attribute.value} for element with id ${element.id}: ${error.message}`);
+					}
+				}
+				params.attributes.set(attributeName, value);
 			}
-			// Get the grandchildren.
+			// Get the grandchildren and clear them.
 			for (const child of element.childNodes) {
 				params.children.push(child);
+				element.removeChild(child);
 			}
 			element.innerHTML = '';
-			if (element.parentNode !== null) {
-				this.__insertComponent(registryEntry.ComponentType, element.parentNode, element, params);
-				element.parentNode.removeChild(element);
-			}
+			// Create the new component and insert it right before the element.
+			const newComponent = this.insertComponent(registryEntry.ComponentType, element.parentNode!, element, params);
+			element.parentNode!.removeChild(element);
+			// Return the new component's roots.
+			// Used to determine if the new component's roots are now this component's roots.
+			return newComponent._roots;
 		}
 		else {
 			for (const child of element.children) {
 				this.setComponents(child);
 			}
+			return [];
 		}
 	}
 
 	/** Unsets all of the components that are in the node. Used before setting new HTML. */
-	private unsetComponents(node: Node): void {
+	private unsetComponents(element: Element): void {
 		for (const component of this._components) {
-			if (node === this._root || node.contains(this._root)) {
-				this.__deleteComponent(component);
-				break;
+			for (const root of component._roots) {
+				if (element.contains(root)) {
+					this.deleteComponent(component);
+				}
 			}
 		}
 	}
 
 	/** Sets the event handlers for all children of elem. Searches for all attributes starting with
-	 * 'on' and processes them, searching in the context component. */
-	private setEventHandlersFromElemAttributes(element: Element, context: Component): void {
+	 * 'on' and processes them. */
+	private setEventHandlersFromElemAttributes(element: Element): void {
 		const attributeNamesToRemove = [];
 		for (const attribute of element.attributes) {
 			if (attribute.name.startsWith('on')) {
 				// Get the event type without the 'on'.
 				const event = attribute.name.substring(2).toLowerCase();
-				let attributeValue = attribute.value;
 				// Get the attribute value.
-				if (!attributeValue.startsWith('{{') || !attributeValue.endsWith('}}')) {
-					continue;
-				}
-				attributeValue = attributeValue.substring(2, attributeValue.length - 2);
-				// Get the callback.
-				if (isIn(context, attributeValue)) {
-					const handler = context[attributeValue];
-					if (handler === undefined || !(handler instanceof Function)) {
-						throw new Error(`Could not find ${event} handler ${attributeValue} in ${context.constructor.name} for element with id ${element.id}`);
+				let attributeValue = attribute.value;
+				if (attributeValue.startsWith('{$') && attributeValue.endsWith('$}')) {
+					attributeValue = attributeValue.substring(2, attributeValue.length - 2);
+					// Get the callback.
+					if (isIn(this, attributeValue)) {
+						const handler = this[attributeValue];
+						if (handler === undefined || !(handler instanceof Function)) {
+							throw new Error(`Could not find ${event} handler ${attributeValue} in ${this.constructor.name} for element with id ${element.id}`);
+						}
+						// Get the callback bound to this.
+						const boundHandler = handler.bind(this);
+						// Remove the attribute so there's no conflict.
+						attributeNamesToRemove.push(attribute.name);
+						// Add the event listener.
+						element.addEventListener(event, boundHandler);
 					}
-					// Get the callback bound to this.
-					const boundHandler = handler.bind(context);
-					// Remove the attribute so there's no conflict.
-					attributeNamesToRemove.push(attribute.name);
-					// Add the event listener.
-					element.addEventListener(event, boundHandler);
 				}
-
 			}
 		}
+		// Remove the attributes that were handlers to remove any conflicts.
 		for (const attributeName of attributeNamesToRemove) {
 			element.removeAttribute(attributeName);
 		}
+		// Go through the children and so on.
 		for (const child of element.children) {
-			this.setEventHandlersFromElemAttributes(child, context);
+			this.setEventHandlersFromElemAttributes(child);
 		}
 	}
 
@@ -415,7 +409,7 @@ class Component {
 		}
 
 		// Create the registry entry.
-		const entry = new Component.RegistryEntry(this);
+		const entry = new RegistryEntry(this);
 
 		// Include it as one of its ancestors.
 		entry.ancestors.push(entry);
@@ -436,13 +430,40 @@ class Component {
 		// Set the registry entry.
 		this._registry.set(this.name.toLowerCase(), entry);
 	}
+
+	/** The id of the component. */
+	private _id = '';
+
+	/** The root elements. */
+	private _roots: Node[];
+
+	/** The set of child components. */
+	private _components: Set<Component> = new Set();
+
+	/** The mapping of ids to elements. */
+	private _idsToElements: Map<string, Element> = new Map();
+
+	/** The mapping of ids to child components. */
+	private _idsToComponents: Map<string, Component> = new Map();
+
+	/** The registry entry. */
+	private _registryEntry: RegistryEntry;
+
+	/** The registered components, mapped from string to Component type. */
+	private static _registry: Map<string, RegistryEntry> = new Map();
+
+	/** The HTML that goes with the component. */
+	public static html = '';
+
+	/** The CSS that goes with the component. */
+	public static css = '';
 }
 
-namespace Component {
+export namespace Component {
 	/** The params of an element that will become a component. */
 	export class Params {
-		/** The reference of the component, if it has one. */
-		public ref = '';
+		/** The id of the component, if it has one. */
+		public id = '';
 
 		/** The attributes passed as if it were <Component attrib=''...>. All of the keys are lower case. */
 		public attributes: Map<string, unknown> = new Map();
@@ -450,35 +471,33 @@ namespace Component {
 		/** The children of the node as if it were <Component><child1/>...</Component>. */
 		public children: Node[] = [];
 	}
+}
 
-	/** The registry entry that describes a component type. */
-	export class RegistryEntry {
-		/** The component type. */
-		public ComponentType: typeof Component;
+/** The registry entry that describes a component type. */
+class RegistryEntry {
+	/** The component type. */
+	public ComponentType: typeof Component;
 
-		/** The HTML for the ComponentType. */
-		public html: string;
+	/** The HTML for the ComponentType. */
+	public html: string;
 
-		/** The CSS for the ComponentType. */
-		public css: string;
+	/** The CSS for the ComponentType. */
+	public css: string;
 
-		/** The ancestor registry entries, including ComponentType and Component. */
-		public ancestors: RegistryEntry[] = [];
+	/** The ancestor registry entries, including ComponentType and Component. */
+	public ancestors: RegistryEntry[] = [];
 
-		/** The style element. */
-		public styleElem: HTMLStyleElement | null = null;
+	/** The style element. */
+	public styleElem: HTMLStyleElement | null = null;
 
-		/** The number of components using this style. Includes ComponentType and all its descendants. */
-		public styleCount = 0;
+	/** The number of components using this style. Includes ComponentType and all its descendants. */
+	public styleElemUseCount = 0;
 
-		constructor(ComponentType: typeof Component) {
-			this.ComponentType = ComponentType;
-			this.html = ComponentType.html !== undefined ? ComponentType.html.replace(/[\t\n]+/g, '').trim() : '';
-			this.css = ComponentType.css !== undefined ? ComponentType.css.trim() : '';
-		}
+	constructor(ComponentType: typeof Component) {
+		this.ComponentType = ComponentType;
+		this.html = ComponentType.html !== undefined ? ComponentType.html.replace(/>[\t\n]+</g, '><').trim() : '';
+		this.css = ComponentType.css !== undefined ? ComponentType.css.trim() : '';
 	}
 }
 
 Component.register();
-
-export default Component;

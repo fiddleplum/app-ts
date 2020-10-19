@@ -3,7 +3,7 @@ interface ElementWithStyle extends Element {
 }
 
 /** A module for showing and hiding elements on a page. Since it uses dynamic styles, you must use the inline style "display: none", and not classes. */
-export default class ShowHide {
+export class ShowHide {
 	/** Shows an element in an animated way over the duration. The element must be a block display style. */
 	static async show(element: ElementWithStyle, durationInSeconds = 0.125): Promise<void> {
 		const fps = 30.0;

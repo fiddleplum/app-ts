@@ -1,5 +1,5 @@
 /** A generator of ids that are unique per instance of the class. */
-class UniqueIds {
+export class UniqueIds {
 	/** The free ids. If there are no free ids, the next free id is the number used. */
 	private freeIds: number[] = [];
 
@@ -22,5 +22,3 @@ class UniqueIds {
 		this.numUsed -= 1;
 	}
 }
-
-export default UniqueIds;

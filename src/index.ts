@@ -1,14 +1,13 @@
-import App from './app';
-import SimpleApp from './simple_app';
-import Component from './component';
+import { App } from './app';
+import { SimpleApp } from './simple_app';
+import { Component } from './component';
 // import Font from './font';
-import windowHierarchy from './window_hierarchy';
-import Icon from './icon';
-import isIn from './is_in';
-import Router from './router';
-import ShowHide from './show_hide';
+import { Icon } from './icon';
+import { isIn } from './is_in';
+import { Router } from './router';
+import { ShowHide } from './show_hide';
 // import State from './state';
-import UniqueIds from './unique_ids';
+import { UniqueIds } from './unique_ids';
 import WS from './ws';
 
 export {

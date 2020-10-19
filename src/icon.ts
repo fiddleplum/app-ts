@@ -1,6 +1,6 @@
-import Component from './component';
+import { Component } from './component';
 
-export default class Icon extends Component {
+export class Icon extends Component {
 	/** The source. */
 	private _src = '';
 
@@ -18,7 +18,7 @@ export default class Icon extends Component {
 		return this._src;
 	}
 
-	set src(src) {
+	set src(src: string) {
 		if (this._src !== src) {
 			this._src = src;
 			this.update();
@@ -35,7 +35,7 @@ export default class Icon extends Component {
 			}
 			const svg = template.content.firstElementChild;
 			// Remove the old children.
-			const rootElement = this.root;
+			const rootElement = this.roots()[0] as SVGElement;
 			while (rootElement.lastChild !== null) {
 				rootElement.removeChild(rootElement.lastChild);
 			}

@@ -1,10 +1,21 @@
+const TSConfigPathsWebpackPlugin = require('tsconfig-paths-webpack-plugin');
+
 module.exports = {
 	entry: './src/app.ts',
 	output: {
 		filename: 'script.js'
 	},
 	resolve: {
-		extensions: ['.webpack.js', '.web.js', '.ts', '.js']
+		extensions: ['.ts', '.js'],
+		plugins: [new TSConfigPathsWebpackPlugin()]
+	},
+	devServer:{
+		contentBase: 'src',
+		watchContentBase: true
+	},
+	watchOptions: {
+		aggregateTimeout: 1000,
+		poll: 1000,
 	},
 	module: {
 		rules: [{
@@ -14,5 +25,11 @@ module.exports = {
 			test: /\.(css|svg|html)$/,
 			use: 'raw-loader'
 		}]
+	},
+	stats: {
+		assets: false,
+	},
+	devServer: {
+		stats: 'errors-only'
 	}
 };

@@ -1,11 +1,5 @@
 /** A router that supports query strings, pushing, and replacing using the history API. */
-class Router {
-	/** The current query. */
-	private query: Router.Query = {};
-
-	/** The callback to be called when the query changes. */
-	private callbacks: Set<Router.Callback> = new Set();
-
+export class Router {
 	constructor() {
 		// Add an event listener so that it processes an event when the user uses the History API,
 		// calling the callback.
@@ -16,51 +10,55 @@ class Router {
 
 	/** Gets value of the given URL query key. */
 	getValue(key: string): string | undefined {
-		return this.query[key];
+		return this._query[key];
 	}
 
 	/** Adds the callback for when the URL query params have changed. */
 	addCallback(callback: Router.Callback): void {
-		this.callbacks.add(callback);
+		this._callbacks.add(callback);
 	}
 
 	/** Removes the callback for when the URL query params have changed. */
 	removeCallback(callback: Router.Callback): void {
-		this.callbacks.delete(callback);
+		this._callbacks.delete(callback);
 	}
 
-	/** Pushes a query to the history and process it, calling the callback. */
-	pushQuery(query: Router.Query): void {
-		// Copy over query.
-		this.query = {};
-		for (const key in query) {
-			this.query[key] = query[key];
+	/** Pushes a query to the history and process it, calling the callback.
+	 *  If merge is true, the query will be merged with the existing query. */
+	pushQuery(query: Router.Query, merge?: boolean): void {
+		if (merge === true) {
+			this._query = { ...this._query, ...query };
 		}
+		else {
+			this._query = JSON.parse(JSON.stringify(query));
+		}
+		const queryString = this.createQueryString(this._query);
 		// Push the history.
-		const queryString = this.createQueryString(query);
-		history.pushState(undefined, '', '?' + queryString);
+		history.pushState(undefined, '', (queryString.length !== 0 ? '?' : '') + queryString);
 		// Call the callbacks.
 		this.callCallbacks();
 	}
 
-	/** Replaces the query at the top of the history. Does not call the callback. */
-	replaceQuery(query: Router.Query): void {
-		// Copy over query.
-		this.query = {};
-		for (const key in query) {
-			this.query[key] = query[key];
+	/** Replaces the query at the top of the history. Does not call the callback.
+	 *  If merge is true, the query will be merged with the existing query. */
+	replaceQuery(query: Router.Query, merge?: boolean): void {
+		if (merge === true) {
+			this._query = { ...this._query, ...query };
 		}
+		else {
+			this._query = JSON.parse(JSON.stringify(query));
+		}
+		const queryString = this.createQueryString(this._query);
 		// Replace the history.
-		const queryString = this.createQueryString(query);
-		history.replaceState(undefined, '', '?' + queryString);
+		history.replaceState(undefined, '', (queryString.length !== 0 ? '?' : '') + queryString);
 	}
 
 	/** Processes the URL query params and calls the callback. */
 	processURL(): void {
 		const urlSearchParams = new URLSearchParams(location.search);
-		this.query = {};
+		this._query = {};
 		for (const entry of urlSearchParams.entries()) {
-			this.query[entry[0]] = entry[1];
+			this._query[entry[0]] = entry[1];
 		}
 		this.callCallbacks();
 	}
@@ -82,13 +80,19 @@ class Router {
 
 	/** Calls all of the callbacks with the current query. */
 	private callCallbacks(): void {
-		for (const callback of this.callbacks) {
-			callback(this.query);
+		for (const callback of this._callbacks) {
+			callback(this._query);
 		}
 	}
+
+	/** The current query. */
+	private _query: Router.Query = {};
+
+	/** The callback to be called when the query changes. */
+	private _callbacks: Set<Router.Callback> = new Set();
 }
 
-namespace Router {
+export namespace Router {
 	/** The query accepted by the router. */
 	export interface Query {
 		[key: string]: string;
@@ -97,5 +101,3 @@ namespace Router {
 	/** The callback format when processing a query. */
 	export type Callback = ((query: Query) => void);
 }
-
-export default Router;

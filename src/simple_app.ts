@@ -1,9 +1,9 @@
-import App from './app';
-import ShowHide from './show_hide';
-import Component from './component';
-import Router from './router';
+import { App } from './app';
+import { ShowHide } from './show_hide';
+import { Component } from './component';
+import { Router } from './router';
 
-class SimpleApp extends App {
+export class SimpleApp extends App {
 	/** A mapping from page names to page components. */
 	private pages: Map<string, typeof SimpleApp.Page> = new Map();
 
@@ -19,19 +19,19 @@ class SimpleApp extends App {
 
 	/** Sets the title HTML. */
 	title(html: string): void {
-		const titleElem = this.__element('title');
+		const titleElem = this.element('title', HTMLAnchorElement);
 		titleElem.innerHTML = html;
 	}
 
 	/** Sets the nav HTML. It can include component references. */
-	nav(context: Component, html: string): void {
-		const elem = this.__element('nav');
-		this.__setHtml(elem, context, html);
+	nav(html: string): void {
+		const elem = this.element('nav', HTMLDivElement);
+		this.setHtml(elem, html);
 	}
 
 	/** Sets the message HTML. */
 	message(message: string): void {
-		const messageElem = this.__element('message');
+		const messageElem = this.element('message', HTMLDivElement);
 		if (message !== '') {
 			console.log(message);
 			messageElem.innerHTML = message;
@@ -67,17 +67,17 @@ class SimpleApp extends App {
 		this.message('');
 
 		// Hide and delete old page.
-		const pageElement = this.__element('page');
+		const pageElement = this.element('page', HTMLDivElement);
 		await ShowHide.hide(pageElement);
 		if (this.page !== null) {
-			this.__deleteComponent(this.page);
+			this.deleteComponent(this.page);
 		}
 		// Construct the params.
 		const params = new Component.Params();
 		params.attributes.set('app', this);
 
 		// Create and show new page.
-		this.page = this.__insertComponent(Page, pageElement, null, params);
+		this.page = this.insertComponent(Page, pageElement, null, params);
 		await ShowHide.show(pageElement);
 	}
 
@@ -157,7 +157,7 @@ SimpleApp.register();
 
 App.setAppClass(SimpleApp);
 
-namespace SimpleApp {
+export namespace SimpleApp {
 	export class Page extends Component {
 		private _app: SimpleApp;
 
@@ -176,5 +176,3 @@ namespace SimpleApp {
 		}
 	}
 }
-
-export default SimpleApp;
