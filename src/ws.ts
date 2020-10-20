@@ -56,7 +56,10 @@ export class WS {
 
 	/** Sends the JSON data along the web socket. Returns a promise resolving with response JSON data. */
 	send<T>(json: JSONType): Promise<T> {
-		// console.log('ws.send ' + JSON.stringify(json));
+		if (this.webSocket.readyState !== WebSocket.OPEN) {
+			throw new Error('The web socket is not yet connected.');
+		}
+		console.log('ws.send ' + JSON.stringify(json));
 		return new Promise((resolve, reject) => {
 			const id = this.uniqueIds.get();
 			this.activeSends.set(id, { resolve, reject });
