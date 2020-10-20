@@ -1,1 +1,1 @@
-export type JSONType = void | Date | null | boolean | number | string | JSON[] | { [prop: string]: JSON };
+export type JSONType = void | Date | null | boolean | number | string | JSONType[] | { [prop: string]: JSONType };
