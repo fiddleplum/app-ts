@@ -5,7 +5,7 @@ import { JSONType } from './json_type';
 export class WS {
 	constructor(url: string) {
 		// Create the web socket.
-		this.webSocket = new WebSocket('ws:' + url);
+		this.webSocket = new WebSocket('wss://' + url);
 
 		// Setup the promise that resolves when the web socket is ready to be used.
 		this.readyPromise = new Promise((resolve: () => void, reject: (error: ErrorEvent) => void) => {
@@ -38,6 +38,13 @@ export class WS {
 
 			// Call the resolve function.
 			promiseFunctions.resolve(responseData.data);
+		};
+		this.webSocket.onerror = (event: ErrorEvent): void => {
+			console.log(event);
+			console.log(`Error in websocket: ${event.message}`);
+		};
+		this.webSocket.onclose = (event: CloseEvent): void => {
+			console.log(event);
 		};
 		window.addEventListener('beforeunload', () => {
 			this.webSocket.close();
