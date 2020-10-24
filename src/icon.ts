@@ -35,28 +35,28 @@ export class Icon extends Component {
 			}
 			const svg = template.content.firstElementChild;
 			// Remove the old children.
-			const rootElement = this.roots()[0] as SVGElement;
-			while (rootElement.lastChild !== null) {
-				rootElement.removeChild(rootElement.lastChild);
+			const svgElement = this.element('svg', SVGElement);
+			while (svgElement.lastChild !== null) {
+				svgElement.removeChild(svgElement.lastChild);
 			}
 			// Copy over or clear the viewbox.
 			const viewBoxAttribute = svg.getAttribute('viewBox');
 			if (viewBoxAttribute !== null) {
-				rootElement.setAttribute('viewBox', viewBoxAttribute);
+				svgElement.setAttribute('viewBox', viewBoxAttribute);
 			}
 			else {
-				rootElement.removeAttribute('viewBox');
+				svgElement.removeAttribute('viewBox');
 			}
 			// Copy over the children.
 			while (svg.firstChild !== null) {
-				rootElement.appendChild(svg.firstChild);
+				svgElement.appendChild(svg.firstChild);
 			}
 		});
 	}
 }
 
 Icon.html = `
-	<svg></svg>
+	<svg id="svg"></svg>
 	`;
 
 Icon.register();
