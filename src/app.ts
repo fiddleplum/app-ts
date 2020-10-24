@@ -18,7 +18,7 @@ export class App extends Component {
 	}
 
 	/**
-	 * Constructs a component inside the body.
+	 * Constructs a app inside the body.
 	 */
 	constructor() {
 		super(new Component.Params());
@@ -30,6 +30,10 @@ export class App extends Component {
 
 		// Make the app global.
 		window.app = this;
+	}
+
+	/** Destroys the app. */
+	destroy(): void {
 	}
 
 	/** The router system. */
@@ -77,4 +81,8 @@ window.addEventListener('load', () => {
 	catch (error) {
 		console.error(error);
 	}
+});
+
+window.addEventListener('unload', () => {
+	window.app.destroy();
 });

@@ -10,6 +10,7 @@ export class SimpleApp extends App {
 	/** The current page. */
 	private page: SimpleApp.Page | null = null;
 
+	/** Constructs the simple app. */
 	constructor() {
 		super();
 
