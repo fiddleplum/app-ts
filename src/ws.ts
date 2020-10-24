@@ -98,12 +98,12 @@ export class WS {
 	}
 
 	/** Sends the JSON data along the web socket. Returns a promise resolving with response JSON data. */
-	send(data: JSONType): Promise<JSONType | undefined> {
+	send(data: JSONType): Promise<{ [prop: string]: (JSONType | undefined) }> {
 		if (this.webSocket.readyState !== WebSocket.OPEN) {
 			throw new Error('The web socket is not yet connected.');
 		}
 		console.log('ws.send ' + JSON.stringify(data));
-		return new Promise<JSONType | undefined>((resolve, reject) => {
+		return new Promise<{ [prop: string]: (JSONType | undefined) }>((resolve, reject) => {
 			const id = this.uniqueIds.get();
 			this.activeSends.set(id, { resolve, reject });
 			this.webSocket.send(JSON.stringify({
@@ -138,6 +138,6 @@ export namespace WS {
 }
 
 export class PromiseFunctions {
-	resolve: (data: JSONType | undefined) => void = () => {};
+	resolve: (data: { [prop: string]: (JSONType | undefined) }) => void = () => {};
 	reject: (error: Error) => void = () => {}
 }
