@@ -15,29 +15,65 @@ export class WS {
 
 		// When a message is received...
 		this.webSocket.onmessage = (message: MessageEvent): void => {
-			// console.log('received ' + message.data);
+			// Output the message received.
+			console.log('ws.received ' + message.data);
 
-			// Get the response data and the id.
-			const responseData: WS.ResponseData = JSON.parse(message.data);
-			const id = responseData.id;
+			try {
+				// Get the response.
+				let response: JSONType;
+				try {
+					response = JSON.parse(message.data);
+				}
+				catch (error) {
+					throw new Error('Response must be valid JSON. ' + error);
+				}
+				if (typeof response !== 'object' || response === null || Array.isArray(response)) {
+					throw new Error('Response must be an object.');
+				}
 
-			// Get the function to be resolved using the id in the json.
-			const promiseFunctions = this.activeSends.get(id);
-			if (promiseFunctions === undefined) {
-				return;
+				// Get the id of the response.
+				const id = response.id;
+				if (typeof id !== 'number') {
+					throw new Error('Response.id must be a number.');
+				}
+
+				// Get the function to be resolved using the response id.
+				const promiseFunctions = this.activeSends.get(id);
+				if (promiseFunctions === undefined) {
+					throw new Error('No active send waiting for response.');
+				}
+
+				// Get the data of the response.
+				const data = response.data;
+				if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+					throw new Error('Response.data must be an object.');
+				}
+
+				// If the response was not a success, call reject the promise function.
+				if (typeof data.success !== 'boolean') {
+					throw new Error('Response.data.success must be a boolean.');
+				}
+				if (data.success === false) {
+					if (typeof data.error !== 'string') {
+						throw new Error('Response.data.error must be a string when response.data.success is false.');
+					}
+					promiseFunctions.reject(new Error(data.error));
+				}
+
+				// Remove the id from the actively sending message list and release the id.
+				this.activeSends.delete(id);
+				this.uniqueIds.release(id);
+
+				// Call the resolve function without the success and error properties.
+				delete data.success;
+				delete data.error;
+				promiseFunctions.resolve(data);
 			}
-
-			// If the response was not a success, call reject the promise function.
-			if (responseData.success === false) {
-				promiseFunctions.reject(new Error(responseData.error));
+			catch (error) {
+				console.log('Error while receiving websocket message.');
+				console.log('  Message: ' + message.data);
+				console.log('  Error: ' + error);
 			}
-
-			// Remove the id from the actively sending message list and release the id.
-			this.activeSends.delete(id);
-			this.uniqueIds.release(id);
-
-			// Call the resolve function.
-			promiseFunctions.resolve(responseData.data);
 		};
 		this.webSocket.onerror = (event: ErrorEvent): void => {
 			console.log(event);
@@ -62,17 +98,17 @@ export class WS {
 	}
 
 	/** Sends the JSON data along the web socket. Returns a promise resolving with response JSON data. */
-	send<T>(json: JSONType): Promise<T> {
+	send(data: JSONType): Promise<JSONType | undefined> {
 		if (this.webSocket.readyState !== WebSocket.OPEN) {
 			throw new Error('The web socket is not yet connected.');
 		}
-		console.log('ws.send ' + JSON.stringify(json));
-		return new Promise((resolve, reject) => {
+		console.log('ws.send ' + JSON.stringify(data));
+		return new Promise<JSONType | undefined>((resolve, reject) => {
 			const id = this.uniqueIds.get();
 			this.activeSends.set(id, { resolve, reject });
 			this.webSocket.send(JSON.stringify({
 				id: id,
-				json: json
+				data: data
 			}));
 		});
 	}
@@ -93,13 +129,15 @@ export class WS {
 export namespace WS {
 	export interface ResponseData {
 		id: number;
-		success: boolean;
-		error: string;
-		data: any;
+		data: {
+			success: boolean;
+			error: string | undefined;
+			data: JSONType | undefined;
+		}
 	}
 }
 
 export class PromiseFunctions {
-	resolve: (data: any) => void = () => {};
+	resolve: (data: JSONType | undefined) => void = () => {};
 	reject: (error: Error) => void = () => {}
 }
