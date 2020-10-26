@@ -66,7 +66,7 @@ export class Component {
 				const newRoots = this.setComponents(root);
 
 				// If new roots were created, replace the old root with them, and add on the old root's classes.
-				if (newRoots !== undefined) {
+				if (newRoots.length > 0) {
 					this._roots.splice(i, 1, ...newRoots);
 					for (const newRoot of newRoots) {
 						if (newRoot instanceof Element) {
