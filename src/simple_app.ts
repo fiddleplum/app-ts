@@ -2,36 +2,45 @@ import { App } from './app';
 import { ShowHide } from './show_hide';
 import { Component } from './component';
 import { Router } from './router';
+import { WS } from './ws';
 
 export class SimpleApp extends App {
-	/** A mapping from page names to page components. */
-	private pages: Map<string, typeof SimpleApp.Page> = new Map();
-
-	/** The current page. */
-	private page: SimpleApp.Page | null = null;
-
 	/** Constructs the simple app. */
 	constructor() {
 		super();
 
 		// Setup the router callback.
 		this.router.addCallback(this._processQuery.bind(this));
+
+		// Connect to the server.
+		this._ws = new WS('localhost:8081');
+	}
+
+	/** Destructs the app. */
+	destroy(): void {
+		this._ws.close();
+		super.destroy();
+	}
+
+	/** Gets the websocket. */
+	get ws(): WS {
+		return this._ws;
 	}
 
 	/** Sets the title HTML. */
-	title(html: string): void {
+	setTitle(html: string): void {
 		const titleElem = this.element('title', HTMLDivElement).querySelector('a')!;
 		titleElem.innerHTML = html;
 	}
 
 	/** Sets the nav HTML. It can include component references. */
-	nav(html: string): void {
+	setNav(html: string): void {
 		const elem = this.element('nav', HTMLDivElement);
 		this.setHtml(elem, html);
 	}
 
 	/** Sets the message HTML. */
-	message(message: string): void {
+	setMessage(message: string): void {
 		const messageElem = this.element('message', HTMLDivElement);
 		if (message !== '') {
 			console.log(message);
@@ -54,7 +63,7 @@ export class SimpleApp extends App {
 		const pageName = query.page !== undefined ? query.page : '';
 		const Page = this.pages.get(pageName);
 		if (Page === undefined) {
-			this.message('Page "' + pageName + '" not found.');
+			this.setMessage('Page "' + pageName + '" not found.');
 			history.back();
 			return;
 		}
@@ -65,7 +74,7 @@ export class SimpleApp extends App {
 		}
 
 		// Clear any previous messages.
-		this.message('');
+		this.setMessage('');
 
 		// Hide and delete old page.
 		const pageElement = this.element('page', HTMLDivElement);
@@ -86,12 +95,21 @@ export class SimpleApp extends App {
 	private _goToHome(): void {
 		this.router.pushQuery({});
 	}
+
+	/** The websocket. */
+	private _ws: WS;
+
+	/** A mapping from page names to page components. */
+	private pages: Map<string, typeof SimpleApp.Page> = new Map();
+
+	/** The current page. */
+	private page: SimpleApp.Page | null = null;
 }
 
 SimpleApp.html = /*html*/`
-	<div id="title"><a onclick="{$_goToHome$}"></a><span id="nav"></span></div>
-	<div id="message"></div>
+	<div id="title"><a onclick="{$_goToHome$}"></a></div>
 	<div id="page"></div>
+	<div id="message"></div>
 	`;
 
 SimpleApp.css = /*css*/`
@@ -99,11 +117,13 @@ SimpleApp.css = /*css*/`
 		margin: 0;
 		width: 100%;
 		min-height: 100vh;
+		display: grid;
+		grid-template-rows: 3rem 1fr 3rem;
+		grid-template-areas: "title" "page" "message";
 	}
 	.SimpleApp#title {
+		grid-area: title;
 		padding: 0.5rem;
-		font-size: 1.5rem;
-		line-height: 1.5rem;
 	}
 	.SimpleApp#title a {
 		color: inherit;
@@ -113,31 +133,29 @@ SimpleApp.css = /*css*/`
 	.SimpleApp#title a:hover {
 		text-decoration: underline;
 	}
-	.SimpleApp#nav {
-		float: right;
-		text-align: right;
-	}
 	.SimpleApp#message {
-		line-height: 1rem;
-		margin: 0 .5rem;
+		grid-area: message;
+		padding: 0 .5rem;
+		background: var(--bg);
 		height: 0;
 		opacity: 0;
 		transition: opacity .5s, height .5s, margin .5s;
+		font-size: 1rem;
 	}
 	.SimpleApp#message.active {
-		height: 1rem;
+		height: inherit;
 		opacity: 100%;
-		margin: .5rem;
+		padding: .5rem;
 	}
 	.SimpleApp#message a {
 		color: inherit;
 		text-decoration: none;
 	}
 	.SimpleApp#page {
+		grid-area: page;
 		position: relative;
-		width: calc(100% - 1rem);
 		max-width: 50rem;
-		margin: .5rem auto .5rem auto;
+		padding: .5rem;
 	}
 	.SimpleApp#page.fadeOut {
 		opacity: 0;
@@ -151,12 +169,10 @@ SimpleApp.css = /*css*/`
 
 SimpleApp.register();
 
-App.setAppClass(SimpleApp);
+App.setAppClass();
 
 export namespace SimpleApp {
 	export class Page extends Component {
-		private _app: SimpleApp;
-
 		constructor(params: Component.Params) {
 			super(params);
 
@@ -170,5 +186,8 @@ export namespace SimpleApp {
 		public get app(): SimpleApp {
 			return this._app;
 		}
+
+		// The parent app.
+		private _app: SimpleApp;
 	}
 }
