@@ -5,8 +5,8 @@ import { Router } from './router';
 export class App extends Component {
 	/** Sets the subclass of App to be instantiated. It should be called in the main script,
 	 * outside of any function. */
-	static setAppClass(appClass: typeof App): void {
-		App.appClass = appClass;
+	static setAppClass(): void {
+		App.appClass = this;
 	}
 
 	/** Creates the app. */
