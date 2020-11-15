@@ -129,7 +129,7 @@ export class Component {
 			throw new ReferenceError(`The element with id "${id}" could not be found.`);
 		}
 		if (!(element instanceof Type)) {
-			throw new ReferenceError(`The element with id "${id}" is not of type ${Type.constructor.name}`);
+			throw new ReferenceError(`The element with id "${id}" is not of type ${Type.name}`);
 		}
 		return element;
 	}
