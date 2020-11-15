@@ -34,7 +34,7 @@ export class Router {
 		}
 		const queryString = this.createQueryString(this._query);
 		// Push the history.
-		history.pushState(undefined, '', (queryString.length !== 0 ? '?' : '') + queryString);
+		history.pushState(undefined, '', (queryString.length !== 0 ? '?' + queryString : './'));
 		// Call the callbacks.
 		this.callCallbacks();
 	}
@@ -50,7 +50,7 @@ export class Router {
 		}
 		const queryString = this.createQueryString(this._query);
 		// Replace the history.
-		history.replaceState(undefined, '', (queryString.length !== 0 ? '?' : '') + queryString);
+		history.replaceState(undefined, '', (queryString.length !== 0 ? '?' + queryString : './'));
 	}
 
 	/** Processes the URL query params and calls the callback. */
