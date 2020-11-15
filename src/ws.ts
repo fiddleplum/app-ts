@@ -8,11 +8,16 @@ export class WS {
 		this.webSocket = new WebSocket('wss://' + url);
 
 		// Setup the promise that resolves when the web socket is ready to be used.
-		this.readyPromise = new Promise((resolve: () => void, reject: (error: ErrorEvent) => void) => {
-			this.webSocket.onopen = resolve;
-			this.webSocket.onerror = reject;
+		this.readyPromise = new Promise((resolve: () => void, reject: () => void) => {
+			this.promiseResolve = resolve;
+			this.promiseReject = reject;
 		});
 
+		// When the websocket connects...
+		this.webSocket.onopen = (): void => {
+			console.log('Websocket connected.');
+			this.promiseResolve();
+		};
 		// When a message is received...
 		this.webSocket.onmessage = (message: MessageEvent): void => {
 			// Output the message received.
@@ -75,13 +80,16 @@ export class WS {
 				console.log('  Error: ' + error);
 			}
 		};
+		// When there is an error in the websocket...
 		this.webSocket.onerror = (event: ErrorEvent): void => {
-			console.log(event);
-			console.log(`Error in websocket: ${event.message}`);
+			console.log(`Error in websocket.`, event);
+			this.promiseReject();
 		};
+		// When the websocket disconnects...
 		this.webSocket.onclose = (event: CloseEvent): void => {
 			console.log(event);
 		};
+		// Make sure to close the websocket before unloading the page.
 		window.addEventListener('beforeunload', () => {
 			this.webSocket.close();
 		});
@@ -118,6 +126,12 @@ export class WS {
 
 	/** A promise that resolves when the WebSocket connection is open. */
 	private readyPromise: Promise<void>;
+
+	/** The resolve function for the ready promise. */
+	private promiseResolve!: () => void;
+
+	/** The reject function for the ready promise. */
+	private promiseReject!: () => void;
 
 	/** A collection of unique ids for pairing received messages with sent messages. */
 	private uniqueIds: UniqueIds = new UniqueIds();
