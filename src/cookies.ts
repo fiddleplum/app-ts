@@ -3,7 +3,7 @@ export class Cookies {
 	 * @param name - The name of the cookie. */
 	static get(name: string): string | undefined {
 		const cookieEntries = document.cookie.split(';');
-		const cookieEntry = cookieEntries.find(cookie => cookie.startsWith(name + '='));
+		const cookieEntry = cookieEntries.find(cookie => cookie.trim().startsWith(name + '='));
 		if (cookieEntry !== undefined) {
 			return decodeURIComponent(cookieEntry.split('=')[1]);
 		}
