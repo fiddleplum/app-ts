@@ -496,8 +496,18 @@ class RegistryEntry {
 
 	constructor(ComponentType: typeof Component) {
 		this.ComponentType = ComponentType;
-		this.html = ComponentType.html !== undefined ? ComponentType.html.replace(/>[\t\n]+</g, '><').trim() : '';
-		this.css = ComponentType.css !== undefined ? ComponentType.css.trim() : '';
+		if (Object.prototype.hasOwnProperty.call(ComponentType, 'html') === true) {
+			this.html = ComponentType.html.replace(/>[\t\n]+</g, '><').trim();
+		}
+		else {
+			this.html = '';
+		}
+		if (Object.prototype.hasOwnProperty.call(ComponentType, 'css') === true) {
+			this.css = ComponentType.css.trim();
+		}
+		else {
+			this.css = '';
+		}
 	}
 }
 
