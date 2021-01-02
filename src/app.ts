@@ -69,7 +69,7 @@ App.register();
 // Typing to ensure TypeScript is happy with the app global.
 declare global {
 	interface Window {
-		app: App;
+		app: App | undefined;
 	}
 }
 
@@ -84,5 +84,7 @@ window.addEventListener('load', () => {
 });
 
 window.addEventListener('unload', () => {
-	window.app.destroy();
+	if (window.app !== undefined) {
+		window.app.destroy();
+	}
 });

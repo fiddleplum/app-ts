@@ -357,8 +357,8 @@ export class Component {
 					// Get the callback.
 					if (isIn(this, attributeValue)) {
 						const handler = this[attributeValue];
-						if (handler === undefined || !(handler instanceof Function)) {
-							throw new Error(`Could not find ${event} handler ${attributeValue} in ${this.constructor.name} for element with id ${element.id}`);
+						if (!(handler instanceof Function)) {
+							throw new Error(`Attribute value ${attributeValue} in ${this.constructor.name} for element${element.id !== '' ? ` with id ${element.id}` : ``} does not refer to a function.`);
 						}
 						// Get the callback bound to this.
 						const boundHandler = handler.bind(this);
@@ -366,6 +366,9 @@ export class Component {
 						attributeNamesToRemove.push(attribute.name);
 						// Add the event listener.
 						element.addEventListener(event, boundHandler);
+					}
+					else {
+						throw new Error(`Could not find ${event} handler ${attributeValue} in ${this.constructor.name} for element${element.id !== '' ? ` with id ${element.id}` : ``}`);
 					}
 				}
 			}
