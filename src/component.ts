@@ -19,9 +19,19 @@ export class Component {
 		this._id = params.id;
 
 		// Create the template and add the html content as the root nodes.
-		const templateElem = document.createElement('template');
-		templateElem.innerHTML = registryEntry.html;
-		this._roots = [...templateElem.content.cloneNode(true).childNodes];
+		// It uses the most recent ancestor with html.
+		let registryEntryWithHTML = registryEntry;
+		while (registryEntryWithHTML.ancestors.length > 1 && registryEntryWithHTML.html === '') {
+			registryEntryWithHTML = registryEntryWithHTML.ancestors[1];
+		}
+		if (registryEntryWithHTML.html !== '') {
+			const templateElem = document.createElement('template');
+			templateElem.innerHTML = registryEntryWithHTML.html;
+			this._roots = [...templateElem.content.cloneNode(true).childNodes];
+		}
+		else {
+			this._roots = [];
+		}
 
 		// Setup the root nodes.
 		for (const root of this._roots) {
@@ -488,7 +498,7 @@ class RegistryEntry {
 	/** The CSS for the ComponentType. */
 	public css: string;
 
-	/** The ancestor registry entries, including ComponentType and Component. */
+	/** The ancestor registry entries, including ComponentType at 0 and Component as the last. */
 	public ancestors: RegistryEntry[] = [];
 
 	/** The style element. */

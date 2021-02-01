@@ -76,6 +76,7 @@ declare global {
 // Once the window 'load' event has been triggered, construct the app.
 window.addEventListener('load', () => {
 	try {
+		console.log('Initializing app.');
 		App.createApp();
 	}
 	catch (error) {
