@@ -2,7 +2,6 @@ import { App } from './app';
 import { ShowHide } from './show_hide';
 import { Component } from './component';
 import { Router } from './router';
-import { WS } from './ws';
 
 export class SimpleApp extends App {
 	/** Constructs the simple app. */
@@ -11,20 +10,8 @@ export class SimpleApp extends App {
 
 		// Setup the router callback.
 		this._router.addCallback(this._processQuery.bind(this));
-
-		// Connect to the server.
-		this._ws = new WS('localhost:8081');
 	}
 
-	/** Destructs the app. */
-	destroy(): void {
-		this._ws.close();
-		super.destroy();
-	}
-
-	/** Gets the websocket. */
-	get ws(): WS {
-		return this._ws;
 	/** Gets the router. */
 	get router(): Router {
 		return this._router;
@@ -34,12 +21,6 @@ export class SimpleApp extends App {
 	setTitle(html: string): void {
 		const titleElem = this.element('title', HTMLDivElement).querySelector('a')!;
 		titleElem.innerHTML = html;
-	}
-
-	/** Sets the nav HTML. It can include component references. */
-	setNav(html: string): void {
-		const elem = this.element('nav', HTMLDivElement);
-		this.setHtml(elem, html);
 	}
 
 	/** Sets the message HTML. */
@@ -99,8 +80,6 @@ export class SimpleApp extends App {
 		this._router.pushQuery({});
 	}
 
-	/** The websocket. */
-	private _ws: WS;
 	/** The router system. */
 	private _router: Router = new Router();
 
@@ -174,7 +153,7 @@ SimpleApp.css = /*css*/`
 
 SimpleApp.register();
 
-App.setAppClass();
+SimpleApp.setAppClass();
 
 export namespace SimpleApp {
 	export class Page extends Component {
