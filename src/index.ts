@@ -1,6 +1,7 @@
 export * from './app';
 export * from './component';
 export * from './cookies';
+export * from './download';
 export * from './icon';
 export * from './is_in';
 export * from './json_type';
