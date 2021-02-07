@@ -1,5 +1,4 @@
 import { Component } from './component';
-import { Router } from './router';
 
 /** A very simple scaffolding for apps. */
 export class App extends Component {
@@ -35,9 +34,6 @@ export class App extends Component {
 	/** Destroys the app. */
 	destroy(): void {
 	}
-
-	/** The router system. */
-	public readonly router: Router = new Router();
 
 	/** The subclass of App to be instantiated. */
 	private static appClass: typeof App = App;

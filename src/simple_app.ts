@@ -10,7 +10,7 @@ export class SimpleApp extends App {
 		super();
 
 		// Setup the router callback.
-		this.router.addCallback(this._processQuery.bind(this));
+		this._router.addCallback(this._processQuery.bind(this));
 
 		// Connect to the server.
 		this._ws = new WS('localhost:8081');
@@ -25,6 +25,9 @@ export class SimpleApp extends App {
 	/** Gets the websocket. */
 	get ws(): WS {
 		return this._ws;
+	/** Gets the router. */
+	get router(): Router {
+		return this._router;
 	}
 
 	/** Sets the title HTML. */
@@ -93,11 +96,13 @@ export class SimpleApp extends App {
 
 	/** Goes to the home page. */
 	private _goToHome(): void {
-		this.router.pushQuery({});
+		this._router.pushQuery({});
 	}
 
 	/** The websocket. */
 	private _ws: WS;
+	/** The router system. */
+	private _router: Router = new Router();
 
 	/** A mapping from page names to page components. */
 	private pages: Map<string, typeof SimpleApp.Page> = new Map();
