@@ -18,9 +18,14 @@ export class SimpleApp extends App {
 	}
 
 	/** Sets the title HTML. */
-	setTitle(html: string): void {
-		const titleElem = this.element('title', HTMLDivElement).querySelector('a')!;
+	setTitleHTML(html: string): void {
+		const titleElem = this.element('title', HTMLSpanElement).querySelector('a')!;
 		titleElem.innerHTML = html;
+	}
+
+	/** Sets the menu HTML. */
+	setMenu(html: string): void {
+		this.insertHtml(this.element('menu', HTMLSpanElement), null, html);
 	}
 
 	/** Sets the message HTML. */
@@ -48,7 +53,6 @@ export class SimpleApp extends App {
 		const Page = this.pages.get(pageName);
 		if (Page === undefined) {
 			this.setMessage('Page "' + pageName + '" not found.');
-			history.back();
 			return;
 		}
 
@@ -91,9 +95,20 @@ export class SimpleApp extends App {
 }
 
 SimpleApp.html = /*html*/`
-	<div id="title"><a onclick="{$_goToHome$}"></a></div>
-	<div id="page"></div>
-	<div id="message"></div>
+	<div id="headerArea">
+		<div id="header" class="pageWidth">
+			<span id="title"><a onclick="{$_goToHome$}"></a></span><span id="menu"></span>
+		</div>
+	</div>
+	<div id="page" class="pageWidth"></div>
+	<div id="messageArea">
+		<div id="message" class="pageWidth">
+		</div>
+	</div>
+	<div id="footerArea">
+		<div id="footer" class="pageWidth">
+		</div>
+	</div>
 	`;
 
 SimpleApp.css = /*css*/`
@@ -102,43 +117,30 @@ SimpleApp.css = /*css*/`
 		width: 100%;
 		min-height: 100vh;
 		display: grid;
-		grid-template-rows: 3rem 1fr 3rem;
-		grid-template-areas: "title" "page" "message";
+		grid-template-rows: 2rem 1fr 2rem 2rem;
+		grid-template-areas: "header" "page" "message" "footer";
 	}
-	.SimpleApp#title {
-		grid-area: title;
+	.SimpleApp#headerArea {
+		grid-area: header;
+		background: var(--bg);
+	}
+	.SimpleApp#headerArea #header {
 		padding: 0.5rem;
 	}
-	.SimpleApp#title a {
+	.SimpleApp#headerArea #title a {
 		color: inherit;
 		text-decoration: none;
 		cursor: pointer;
 	}
-	.SimpleApp#title a:hover {
+	.SimpleApp#headerArea #title a:hover {
 		text-decoration: underline;
 	}
-	.SimpleApp#message {
-		grid-area: message;
-		padding: 0 .5rem;
-		background: var(--bg);
-		height: 0;
-		opacity: 0;
-		transition: opacity .5s, height .5s, margin .5s;
-		font-size: 1rem;
-	}
-	.SimpleApp#message.active {
-		height: inherit;
-		opacity: 100%;
-		padding: .5rem;
-	}
-	.SimpleApp#message a {
-		color: inherit;
-		text-decoration: none;
+	.SimpleApp#headerArea #menu {
+		float: right;
 	}
 	.SimpleApp#page {
 		grid-area: page;
 		position: relative;
-		max-width: 50rem;
 		padding: .5rem;
 	}
 	.SimpleApp#page.fadeOut {
@@ -148,6 +150,39 @@ SimpleApp.css = /*css*/`
 	.SimpleApp#page.fadeIn {
 		opacity: 1;
 		transition: opacity .125s;
+	}
+	.SimpleApp#messageArea {
+		grid-area: message;
+		background: var(--bg);
+	}
+	.SimpleApp#messageArea #message {
+		padding: 0 .5rem;
+		height: 0;
+		opacity: 0;
+		transition: opacity .5s, height .5s, margin .5s;
+		font-size: 1rem;
+	}
+	.SimpleApp#messageArea #message.active {
+		height: inherit;
+		opacity: 100%;
+		padding: .5rem;
+	}
+	.SimpleApp#messageArea #message a {
+		color: inherit;
+		text-decoration: none;
+	}
+	.SimpleApp#footerArea {
+		grid-area: footer;
+		background: var(--bg);
+	}
+	.SimpleApp#footerArea #footer {
+		padding: 0 .5rem;
+	}
+	.pageWidth {
+		margin: 0 auto;
+		width: 100%;
+		min-width: 10rem;
+		max-width: 25rem;
 	}
 	`;
 
