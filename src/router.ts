@@ -1,6 +1,11 @@
 /** A router that supports query strings, pushing, and replacing using the history API. */
 export class Router {
 	constructor() {
+		// Get the current query.
+		const urlSearchParams = new URLSearchParams(location.search);
+		for (const entry of urlSearchParams.entries()) {
+			this._query[entry[0]] = entry[1];
+		}
 		// Add an event listener so that it processes an event when the user uses the History API,
 		// calling the callback.
 		window.addEventListener('popstate', () => {
