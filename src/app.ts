@@ -1,11 +1,11 @@
 import { Component } from './component';
 
 /** A very simple scaffolding for apps. */
-export class App extends Component {
+export abstract class App extends Component {
 	/** Sets the subclass of App to be instantiated. It should be called in the main script,
 	 * outside of any function. */
 	static setAppClass(): void {
-		App.appClass = this;
+		App.appClass = this as unknown as (new () => App);
 	}
 
 	/** Creates the app. */
@@ -32,11 +32,10 @@ export class App extends Component {
 	}
 
 	/** Destroys the app. */
-	destroy(): void {
-	}
+	abstract destroy(): void;
 
 	/** The subclass of App to be instantiated. */
-	private static appClass: typeof App = App;
+	private static appClass: new () => App;
 }
 
 App.css = /*css*/`
