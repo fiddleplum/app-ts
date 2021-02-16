@@ -38,7 +38,6 @@ export class Component {
 			// Set the id to element mapping of the root and its children.
 			if (root instanceof Element) {
 				this.setIds(root);
-				this.setEventHandlersFromElemAttributes(root);
 
 				// Add the classes to the root element.
 				for (const ancestorEntries of registryEntry.ancestors) {
@@ -188,7 +187,6 @@ export class Component {
 			parent.insertBefore(newNode, before);
 			if (newNode instanceof Element) {
 				this.setIds(newNode);
-				this.setEventHandlersFromElemAttributes(newNode);
 				this.setComponents(newNode);
 			}
 		}
