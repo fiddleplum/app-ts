@@ -63,6 +63,17 @@ export class Component {
 				lastStyleElem = ancestorEntry.styleElem;
 			}
 		}
+
+		// Add the window focus release if it hasn't already been added.
+		if (!Component._windowFocusReleaseAdded) {
+			window.addEventListener('mouseup', (event) => {
+				this._unsetFocusReleaseCallback(event);
+			});
+			window.addEventListener('touchend', (event) => {
+				this._unsetFocusReleaseCallback(event);
+			});
+			Component._windowFocusReleaseAdded = true;
+		}
 	}
 
 	/** Creates any child components in the HTML. It's separate from the constructor, because
@@ -443,6 +454,38 @@ export class Component {
 		this._registry.set(this.name.toLowerCase(), entry);
 	}
 
+	/** Sets the focus release callback for when the mouse releases or touch ends. */
+	setFocusReleaseCallback(callback: ((x: number, y: number) => void)): void {
+		if (Component._focusReleaseCallback !== undefined) {
+			throw new Error('Another component already has the focus.');
+		}
+		// Make everything unselectable.
+		document.body.classList.add('no-select');
+		// Set the callback.
+		Component._focusReleaseCallback = callback;
+	}
+
+	/** Unsets the focus release callback. Called by window onmouseup and ontouchend event handlers. */
+	private _unsetFocusReleaseCallback(event: MouseEvent | TouchEvent): void {
+		let x: number, y: number;
+		if (event instanceof MouseEvent) {
+			x = event.clientX;
+			y = event.clientY;
+		}
+		else {
+			x = event.touches[0].clientX;
+			y = event.touches[0].clientY;
+		}
+		if (Component._focusReleaseCallback !== undefined) {
+			// Call the callback.
+			Component._focusReleaseCallback(x, y);
+			// Remove the callback reference so it doesn't get called again.
+			Component._focusReleaseCallback = undefined;
+			// Make everything selectable.
+			document.body.classList.remove('no-select');
+		}
+	}
+
 	/** The id of the component. */
 	private _id = '';
 
@@ -463,6 +506,12 @@ export class Component {
 
 	/** The registered components, mapped from string to Component type. */
 	private static _registry: Map<string, RegistryEntry> = new Map();
+
+	/** True if the window focus release has been added. */
+	private static _windowFocusReleaseAdded: boolean = false;
+
+	/** The current focus release callback. */
+	private static _focusReleaseCallback: ((x: number, y: number) => void) | undefined;
 
 	/** The HTML that goes with the component. */
 	public static html = '';
