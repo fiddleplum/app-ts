@@ -473,6 +473,26 @@ export class Component {
 	public static css = '';
 }
 
+Component.css = /*css*/`
+	* {
+		box-sizing: border-box;
+	}
+
+	.vertical-align {
+		display: flex;
+		justify-content: center;
+		flex-direction: column;
+	}
+
+	.no-select {
+		-webkit-touch-callout: none;
+		-webkit-user-select: none;
+		-moz-user-select: none;
+		-ms-user-select: none;
+		user-select: none;
+	}
+	`;
+
 export namespace Component {
 	/** The params of an element that will become a component. */
 	export class Params {

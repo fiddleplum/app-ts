@@ -38,26 +38,6 @@ export abstract class App extends Component {
 	private static appClass: new () => App;
 }
 
-App.css = /*css*/`
-	* {
-		box-sizing: border-box;
-	}
-
-	.vertical-align {
-		display: flex;
-		justify-content: center;
-		flex-direction: column;
-	}
-
-	.no-select {
-		-webkit-touch-callout: none;
-		-webkit-user-select: none;
-		-moz-user-select: none;
-		-ms-user-select: none;
-		user-select: none;
-	}
-	`;
-
 // Register the app class.
 App.register();
 
