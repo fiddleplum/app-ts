@@ -6,17 +6,12 @@ export class ToggleButton extends AbstractButton {
 		super(params);
 
 		// Get the user press callback.
-		if (params.attributes.has('pressed')) {
-			const value = params.attributes.get('pressed');
-			if (typeof value !== 'string' && typeof value !== 'boolean') {
-				throw new Error('pressed must be "true", "false", or a boolean.');
-			}
-			if (value === 'true' || value === true) {
-				// Add the pressed class.
-				this.element('root', HTMLDivElement).classList.add('pressed');
-				// Set the state.
-				this._pressed = true;
-			}
+		const pressedValue = params.attributes.get('pressed');
+		if (pressedValue === 'true') {
+			// Add the pressed class.
+			this.element('root', HTMLDivElement).classList.add('pressed');
+			// Set the state.
+			this._pressed = true;
 		}
 	}
 
@@ -31,7 +26,7 @@ export class ToggleButton extends AbstractButton {
 			// Set the state.
 			this._pressed = true;
 			// Call the user press callback.
-			this._onPressCallback();
+			this._pressEventHandler();
 		}
 		else {
 			// Remove the pressed class.
@@ -42,7 +37,7 @@ export class ToggleButton extends AbstractButton {
 			// Set the state.
 			this._pressed = false;
 			// Call the user release callback.
-			this._onReleaseCallback();
+			this._releaseEventHandler();
 		}
 	}
 

@@ -1,4 +1,5 @@
 import { isIn } from './is_in';
+import { App } from './app';
 
 /**
  * A base component from which other components can extend.
@@ -24,22 +25,31 @@ export class Component {
 		while (registryEntryWithHTML.ancestors.length > 1 && registryEntryWithHTML.html === '') {
 			registryEntryWithHTML = registryEntryWithHTML.ancestors[1];
 		}
+		// Check if the component is an app.
+		const componentIsApp = this instanceof App;
 		const templateElem = document.createElement('template');
 		templateElem.innerHTML = registryEntryWithHTML.html;
-		if (templateElem.content.childNodes.length !== 1) {
-			throw new Error(`In ${this} there must exactly be one root in the HTML.`);
+		if (componentIsApp) {
+			document.body.innerHTML = '';
+			const rootChildren = [...templateElem.content.childNodes];
+			for (const child of rootChildren) {
+				document.body.appendChild(child);
+			}
+			this._root = document.body;
 		}
-		const root = templateElem.content.childNodes[0];
-		if (!(root instanceof Element)) {
-			throw new Error(`In ${this} the root node must be an Element type.`);
+		else {
+			if (templateElem.content.childNodes.length !== 1) {
+				throw new Error(`In ${this}, there must exactly be one root in the HTML.`);
+			}
+			const root = templateElem.content.childNodes[0];
+			if (!(root instanceof Element)) {
+				throw new Error(`In ${this}, the root node must be an Element type.`);
+			}
+			this._root = root;
 		}
-		this._root = root;
 
-		// If the root is the body element, replace the existing body with the root.
-		if (this._root.tagName === 'BODY') {
-			document.removeChild(document.body);
-			document.appendChild(this._root);
-		}
+		// Set the elements that are child components and the event handlers.
+		this.setComponentsAndEventHandlers(this._root);
 
 		// Set the id-to-element mapping of the root and its children.
 		this.setIds(this._root);
@@ -77,13 +87,6 @@ export class Component {
 			});
 			Component._windowFocusReleaseAdded = true;
 		}
-	}
-
-	/** Creates any child components in the HTML. It's separate from the constructor, because
-	 * the subclass needs to have its variables set for the child component attributes. */
-	protected createChildComponents(): void {
-		// If the root or its children are components, create them.
-		this.setComponents(this._root);
 	}
 
 	/** Destroys the component when it is no longer needed. Call to clean up the object. */
@@ -170,8 +173,17 @@ export class Component {
 
 	/** Removes an element. */
 	protected removeElement(element: Element): void {
+		// Unset any ids associated with the element and its children.
 		this.unsetIds(element);
-		this.unsetComponents(element);
+
+		// Unset all of the components that are in the node. */
+		for (const component of this._components) {
+			if (element.contains(component._root)) {
+				this.deleteComponent(component);
+			}
+		}
+
+		// Remove the element from its parent.
 		element.parentNode?.removeChild(element);
 	}
 
@@ -184,8 +196,8 @@ export class Component {
 			const newNode = child.cloneNode(true);
 			parent.insertBefore(newNode, before);
 			if (newNode instanceof Element) {
+				this.setComponentsAndEventHandlers(newNode);
 				this.setIds(newNode);
-				this.setComponents(newNode);
 			}
 		}
 	}
@@ -195,13 +207,8 @@ export class Component {
 	protected insertComponent<T extends Component>(ComponentType: new (params: Component.Params) => T, parentNode: Node, beforeChild: Node | null, params: Component.Params): T {
 		// Create the component.
 		const newComponent = new ComponentType(params);
-		// Create any child components that are within the html of the component.
-		newComponent.createChildComponents();
-		// Set the event handlers for the root.
-		// It happens after the child components have been created, because the root node may have changed.
-		newComponent.setEventHandlersFromElemAttributes(newComponent._root);
 		// Insert the new component root in the right spot of this component.
-		parentNode.insertBefore(this._root, beforeChild);
+		parentNode.insertBefore(newComponent._root, beforeChild);
 		// Add it to the list of components.
 		this._components.add(newComponent);
 		// Set the id, if there is one.
@@ -237,6 +244,9 @@ export class Component {
 		}
 		// Set the id to element mapping.
 		if (element.id !== undefined && element.id !== '') {
+			if (this._idsToElements.has(element.id)) {
+				throw new Error(`In ${this}, the element with id ${element.id} is already used.`);
+			}
 			this._idsToElements.set(element.id, element);
 		}
 		// Check the children of this element.
@@ -259,120 +269,81 @@ export class Component {
 	}
 
 	/** Goes through all of the tags, and for any that match a component in the registry, sets it with
-	 * the matching component. Goes through all of the children also. */
-	private setComponents(element: Element): void {
+	 *  the matching component. Goes through all of the children also. */
+	private setComponentsAndEventHandlers(element: Element): void {
 		const registryEntry = Component._registry.get(element.tagName.toLowerCase());
-		// The element is a component ready to be instantiated.
-		if (registryEntry !== undefined) {
+		// The element is a component ready to be instantiated. It can't be the root or a reserved tag.
+		if (element !== this._root && element instanceof HTMLUnknownElement && registryEntry !== undefined) {
 			// Create the params.
 			const params = new Component.Params();
 
 			// Set the id.
 			params.id = element.id;
 
-			// Get the attributes.
+			// Extract the event handlers from the attributes.
+			const eventHandlers = this.extractEventHandlers(element);
+			for (const entry of eventHandlers) {
+				params.eventHandlers.set(entry[0], entry[1]);
+			}
+
+			// Go through any remaining attributes and add them to the params.
 			for (const attribute of element.attributes) {
 				const attributeName = attribute.name.toLowerCase();
-				let attributeValue = attribute.value;
-				let value: unknown = attributeValue;
-				if (attributeValue.startsWith('{$') && attributeValue.endsWith('$}')) {
-					attributeValue = attributeValue.substring(2, attributeValue.length - 2);
-					const valueAsNumber = parseFloat(attributeValue);
-					if (!isNaN(valueAsNumber)) {
-						value = valueAsNumber;
-					}
-					else if (attributeValue === 'false') {
-						value = false;
-					}
-					else if (attributeValue === 'true') {
-						value = true;
-					}
-					if (isIn(this, attributeValue)) {
-						value = this[attributeValue];
-						if (value instanceof Function) {
-							value = value.bind(this);
-						}
-					}
-					else {
-						throw new Error(`Could not find value for attribute ${attribute.name}=${attribute.value} for element with id ${element.id}.`);
-					}
+				const attributeValue = attribute.value;
+				if (attributeName !== 'id') {
+					params.attributes.set(attribute.name.toLowerCase(), attributeValue);
 				}
-				else if (attributeValue.startsWith('{J') && attributeValue.endsWith('J}')) {
-					attributeValue = attributeValue.substring(2, attributeValue.length - 2);
-					try {
-						value = JSON.parse(attributeValue);
-					}
-					catch (error) {
-						throw new Error(`Could not parse JSON attribute ${attribute.name}=${attribute.value} for element with id ${element.id}: ${error.message}`);
-					}
-				}
-				params.attributes.set(attributeName, value);
 			}
-			// Get the grandchildren and clear them.
+
+			// Get the children and clear them.
 			for (const child of element.childNodes) {
 				params.children.push(child);
 				element.removeChild(child);
 			}
 			element.innerHTML = '';
-			// Create the new component and insert it right before the element.
+
+			// Create the new component and insert it right before the element, removing the element.
 			this.insertComponent(registryEntry.ComponentType, element.parentNode!, element, params);
 			element.parentNode!.removeChild(element);
 		}
 		else {
+			// Extract the event handlers from the attributes and add the event listeners.
+			const eventHandlers = this.extractEventHandlers(element);
+			for (const entry of eventHandlers) {
+				// Add the event listener.
+				element.addEventListener(entry[0], entry[1]);
+			}
+
+			// Go through the child elements.
 			for (const child of element.children) {
-				this.setComponents(child);
+				this.setComponentsAndEventHandlers(child);
 			}
 		}
 	}
 
-	/** Unsets all of the components that are in the node. Used before setting new HTML. */
-	private unsetComponents(element: Element): void {
-		for (const component of this._components) {
-			if (element.contains(this._root)) {
-				this.deleteComponent(component);
-			}
-		}
-	}
-
-	/** Sets the event handlers for all children of elem. Searches for all attributes starting with
-	 * 'on' and processes them. */
-	private setEventHandlersFromElemAttributes(element: Element): void {
-		const attributeNamesToRemove = [];
+	/** Extracts the event handlers of the element as a mapping of strings to this-bound functions. */
+	private extractEventHandlers(element: Element): Map<string, () => void> {
+		const eventHandlers: Map<string, () => void> = new Map();
+		// Get the attributes and event handlers.
 		for (const attribute of element.attributes) {
-			if (attribute.name.startsWith('on')) {
-				// Get the event type without the 'on'.
-				const event = attribute.name.substring(2).toLowerCase();
-				// Get the attribute value.
-				let attributeValue = attribute.value;
-				if (attributeValue.startsWith('{$') && attributeValue.endsWith('$}')) {
-					attributeValue = attributeValue.substring(2, attributeValue.length - 2);
-					// Get the callback.
-					if (isIn(this, attributeValue)) {
-						const handler = this[attributeValue];
-						if (!(handler instanceof Function)) {
-							throw new Error(`Attribute value ${attributeValue} in ${this.constructor.name} for element${element.id !== '' ? ` with id ${element.id}` : ``} does not refer to a function.`);
-						}
-						// Get the callback bound to this.
-						const boundHandler = handler.bind(this);
-						// Remove the attribute so there's no conflict.
-						attributeNamesToRemove.push(attribute.name);
-						// Add the event listener.
-						element.addEventListener(event, boundHandler);
+			const attributeName = attribute.name.toLowerCase();
+			if (attributeName.startsWith('on')) {
+				if (isIn(this, attribute.value)) {
+					const value = this[attribute.value];
+					if (value instanceof Function) {
+						eventHandlers.set(attributeName.substring(2), value.bind(this));
+						element.removeAttribute(attributeName);
 					}
 					else {
-						throw new Error(`Could not find ${event} handler ${attributeValue} in ${this.constructor.name} for element${element.id !== '' ? ` with id ${element.id}` : ``}`);
+						throw new Error(`In ${this}, the value of the event handler ${attributeName} of component element ${element.id} is not a function of ${this.constructor.name}.`);
 					}
+				}
+				else {
+					throw new Error(`In ${this} , the value of the event handler ${attributeName} of component element ${element.id} is not in ${this.constructor.name}.`);
 				}
 			}
 		}
-		// Remove the attributes that were handlers to remove any conflicts.
-		for (const attributeName of attributeNamesToRemove) {
-			element.removeAttribute(attributeName);
-		}
-		// Go through the children and so on.
-		for (const child of element.children) {
-			this.setEventHandlersFromElemAttributes(child);
-		}
+		return eventHandlers;
 	}
 
 	/** Gets the inputs from a form along with their values. Each key/value pair is an input's name and
@@ -520,7 +491,10 @@ export namespace Component {
 		public id = '';
 
 		/** The attributes passed as if it were <Component attrib=''...>. All of the keys are lower case. */
-		public attributes: Map<string, unknown> = new Map();
+		public attributes: Map<string, string> = new Map();
+
+		/** The event handlers passed as if it were <Component onevent=''...>. All of the keys are lower case, without the 'on' part. */
+		public eventHandlers: Map<string, () => void> = new Map();
 
 		/** The children of the node as if it were <Component><child1/>...</Component>. */
 		public children: Node[] = [];

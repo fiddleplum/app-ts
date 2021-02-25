@@ -8,8 +8,9 @@ export class Icon extends Component {
 		super(params);
 
 		// Set the source from the attributes.
-		if (params.attributes.has('src')) {
-			this._src = params.attributes.get('src') as string;
+		const srcValue = params.attributes.get('src');
+		if (srcValue !== undefined) {
+			this._src = srcValue;
 			this.update();
 		}
 	}
@@ -26,6 +27,9 @@ export class Icon extends Component {
 	}
 
 	private update(): void {
+		if (this._src === '') {
+			return;
+		}
 		fetch(this._src).then(response => response.text()).then((text) => {
 			// Parse the text into an svg element.
 			const template = document.createElement('template');

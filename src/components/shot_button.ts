@@ -6,19 +6,11 @@ export class ShotButton extends AbstractButton {
 		super(params);
 
 		// Get the user press callback.
-		if (params.attributes.has('shottime')) {
-			const value = params.attributes.get('shottime');
-			if (typeof value === 'number') {
-				this._shotTime = value;
-			}
-			else if (typeof value === 'string') {
-				this._shotTime = Number.parseFloat(value);
-				if (isNaN(this._shotTime)) {
-					throw new Error('shottime is not a number-parsable string.');
-				}
-			}
-			else {
-				throw new Error('shottime is not a number or a string.');
+		const shotTimeValue = params.attributes.get('shottime');
+		if (shotTimeValue !== undefined) {
+			this._shotTime = Number.parseFloat(shotTimeValue);
+			if (isNaN(this._shotTime)) {
+				throw new Error('shottime is not a number-parsable string.');
 			}
 		}
 	}
@@ -36,12 +28,12 @@ export class ShotButton extends AbstractButton {
 		// Add the pressed class.
 		root.classList.add('pressed');
 		// Call the user press callback.
-		this._onPressCallback();
+		this._pressEventHandler();
 		setTimeout(() => {
 			// Remove the pressed class.
 			this.element('root', HTMLDivElement).classList.remove('pressed');
 			// Call the user release callback.
-			this._onReleaseCallback();
+			this._releaseEventHandler();
 		}, this._shotTime * 1000);
 	}
 

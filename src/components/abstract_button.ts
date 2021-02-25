@@ -5,30 +5,21 @@ export abstract class AbstractButton extends Component {
 		super(params);
 
 		// Get the user press callback.
-		if (params.attributes.has('onpress')) {
-			const value = params.attributes.get('onpress');
-			if (typeof value !== 'function') {
-				throw new Error('onpress must be a function.');
-			}
-			this._onPressCallback = value as () => void;
+		const pressEventHandler = params.eventHandlers.get('press');
+		if (pressEventHandler !== undefined) {
+			this._pressEventHandler = pressEventHandler;
 		}
 
 		// Get the user release callback.
-		if (params.attributes.has('onrelease')) {
-			const value = params.attributes.get('onrelease');
-			if (typeof value !== 'function') {
-				throw new Error('onrelease must be a function.');
-			}
-			this._onReleaseCallback = value as () => void;
+		const releaseEventHandler = params.eventHandlers.get('release');
+		if (releaseEventHandler !== undefined) {
+			this._releaseEventHandler = releaseEventHandler;
 		}
 
 		// Get the user hover callback.
-		if (params.attributes.has('onhover')) {
-			const value = params.attributes.get('onhover');
-			if (typeof value !== 'function') {
-				throw new Error('onhover must be a function.');
-			}
-			this._onHoverCallback = value as () => void;
+		const hoverEventHandler = params.eventHandlers.get('hover');
+		if (hoverEventHandler !== undefined) {
+			this._hoverEventHandler = hoverEventHandler;
 		}
 	}
 
@@ -37,14 +28,14 @@ export abstract class AbstractButton extends Component {
 		const root = this.element('root', HTMLDivElement);
 		root.classList.add('hovered');
 		const rect = root.getBoundingClientRect();
-		this._onHoverCallback(event.clientX - rect.left, event.clientY - rect.top);
+		this._hoverEventHandler(event.clientX - rect.left, event.clientY - rect.top);
 	}
 
 	/** The event callback for when the mouseout happens. */
 	private _mouseOut(): void {
 		const root = this.element('root', HTMLDivElement);
 		root.classList.remove('hovered');
-		this._onHoverCallback(Number.NaN, Number.NaN);
+		this._hoverEventHandler(Number.NaN, Number.NaN);
 	}
 
 	/** Returns true if the coordinates are over the button. */
@@ -58,15 +49,15 @@ export abstract class AbstractButton extends Component {
 	protected abstract _mouseTouchDown(): void;
 
 	/** The user press callback. */
-	protected _onPressCallback: () => void = () => {};
+	protected _pressEventHandler: () => void = () => {};
 
 	/** The user release callback. */
-	protected _onReleaseCallback: () => void = () => {};
+	protected _releaseEventHandler: () => void = () => {};
 
 	/** The user hover callback. */
-	protected _onHoverCallback: (x: number, y: number) => void = () => {};
+	protected _hoverEventHandler: (x: number, y: number) => void = () => {};
 }
 
-AbstractButton.html = /* html */`<div id="root" onmousedown="{$_mouseTouchDown$}" ontouchstart="{$_mouseTouchDown$}" onmousemove="{$_mouseMove$}" onmouseout="{$_mouseOut$}"></div>`;
+AbstractButton.html = /* html */`<div id="root" onmousedown="_mouseTouchDown" ontouchstart="_mouseTouchDown" onmousemove="_mouseMove" onmouseout="_mouseOut"></div>`;
 
 AbstractButton.register();

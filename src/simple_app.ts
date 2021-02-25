@@ -25,6 +25,9 @@ export abstract class SimpleApp extends App {
 	/** Gets the page element. */
 	protected abstract getPageElement(): HTMLElement;
 
+	/** Callback when there's a new page. */
+	protected abstract onNewPage(page: SimpleApp.Page): void;
+
 	/** Processes a query, loading a page. */
 	private async _processQuery(query: Router.Query): Promise<void> {
 		const pageName = query.page !== undefined ? query.page : '';
@@ -46,13 +49,12 @@ export abstract class SimpleApp extends App {
 			this.deleteComponent(this.page);
 		}
 
-		// Construct the params.
-		const params = new Component.Params();
-		params.attributes.set('app', this);
-
 		// Create and show new page.
-		this.page = this.insertComponent(Page, pageElement, null, params);
+		this.page = this.insertComponent(Page, pageElement, null, new Component.Params());
 		await ShowHide.show(pageElement);
+
+		// Call the new page callback.
+		this.onNewPage(this.page);
 	}
 
 	/** The router system. */
@@ -71,21 +73,5 @@ SimpleApp.setAppClass();
 
 export namespace SimpleApp {
 	export class Page extends Component {
-		constructor(params: Component.Params) {
-			super(params);
-
-			const app = params.attributes.get('app');
-			if (!(app instanceof SimpleApp)) {
-				throw new Error('While constructing page ' + this.constructor.name + ', app is not a SimpleApp.');
-			}
-			this._app = app;
-		}
-
-		public get app(): SimpleApp {
-			return this._app;
-		}
-
-		// The parent app.
-		private _app: SimpleApp;
 	}
 }

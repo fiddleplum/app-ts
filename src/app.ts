@@ -11,9 +11,7 @@ export abstract class App extends Component {
 	/** Creates the app. */
 	static createApp(): void {
 		// Create the app object.
-		const app = new App.appClass();
-		// Create the child components now that the app has been constructed, along with its variables.
-		app.createChildComponents();
+		new App.appClass();
 	}
 
 	/**
