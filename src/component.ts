@@ -18,8 +18,7 @@ export class Component {
 		// Set the id.
 		this._id = params.id;
 
-		// Create the template and add the html content as the root nodes.
-		// It uses the most recent ancestor with html.
+		// Create the template and add the html content as the root nodes. It uses the most descendant ancestor with html.
 		let registryEntryWithHTML = registryEntry;
 		while (registryEntryWithHTML.ancestors.length > 1 && registryEntryWithHTML.html === '') {
 			registryEntryWithHTML = registryEntryWithHTML.ancestors[1];
@@ -160,13 +159,13 @@ export class Component {
 	}
 
 	/** Gets the component with the id. Throws a ReferenceError if not found. */
-	protected component<Type extends Component>(id: string, Type: { new (params: Component.Params): Type }): Type {
+	protected component<Type extends Component>(id: string, type: { new (params: Component.Params): Type }): Type {
 		const component = this._idsToComponents.get(id);
 		if (component === undefined) {
 			throw new ReferenceError(`The component with id "${id}" could not be found.`);
 		}
-		if (!(component instanceof Type)) {
-			throw new ReferenceError(`The component with id "${id}" is not of type ${Type.constructor.name}`);
+		if (!(component instanceof type)) {
+			throw new ReferenceError(`The component with id "${id}" is not of type ${type.name}`);
 		}
 		return component;
 	}
