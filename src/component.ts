@@ -4,6 +4,7 @@ import { isIn } from './is_in';
  * A base component from which other components can extend.
  * Each subclass can have an `html` and a `css` property to add content and style to the components.
  * Only the most derived subclass's `html` property will be used.
+ * If the body tag is the root node in the html, it will be used as the body of the document.
  */
 export class Component {
 	/** Creates the component. */
@@ -18,34 +19,37 @@ export class Component {
 		// Set the id.
 		this._id = params.id;
 
-		// Create the template and add the html content as the root nodes. It uses the most descendant ancestor with html.
+		// Create the template and add the html content as the root node. It uses the most descendant ancestor with html.
 		let registryEntryWithHTML = registryEntry;
 		while (registryEntryWithHTML.ancestors.length > 1 && registryEntryWithHTML.html === '') {
 			registryEntryWithHTML = registryEntryWithHTML.ancestors[1];
 		}
-		if (registryEntryWithHTML.html !== '') {
-			const templateElem = document.createElement('template');
-			templateElem.innerHTML = registryEntryWithHTML.html;
-			this._roots = [...templateElem.content.cloneNode(true).childNodes];
+		const templateElem = document.createElement('template');
+		templateElem.innerHTML = registryEntryWithHTML.html;
+		if (templateElem.content.childNodes.length !== 1) {
+			throw new Error(`In ${this} there must exactly be one root in the HTML.`);
 		}
-		else {
-			this._roots = [];
+		const root = templateElem.content.childNodes[0];
+		if (!(root instanceof Element)) {
+			throw new Error(`In ${this} the root node must be an Element type.`);
 		}
+		this._root = root;
 
-		// Setup the root nodes.
-		for (const root of this._roots) {
-			// Set the id to element mapping of the root and its children.
-			if (root instanceof Element) {
-				this.setIds(root);
-
-				// Add the classes to the root element.
-				for (const ancestorEntries of registryEntry.ancestors) {
-					root.classList.add(ancestorEntries.ComponentType.name);
-				}
-			}
+		// If the root is the body element, replace the existing body with the root.
+		if (this._root.tagName === 'BODY') {
+			document.removeChild(document.body);
+			document.appendChild(this._root);
 		}
 
-		// Set the style element.
+		// Set the id-to-element mapping of the root and its children.
+		this.setIds(this._root);
+
+		// Add the classes to the root element.
+		for (const ancestorEntries of registryEntry.ancestors) {
+			this._root.classList.add(ancestorEntries.ComponentType.name);
+		}
+
+		// Set the style elements for the component and its ancestors.
 		let lastStyleElem = null;
 		for (let i = 0; i < registryEntry.ancestors.length; i++) {
 			const ancestorEntry = registryEntry.ancestors[i];
@@ -63,7 +67,7 @@ export class Component {
 			}
 		}
 
-		// Add the window focus release if it hasn't already been added.
+		// Add the window focus release if it hasn't already been added. Used for drag-and-drop and buttons releases.
 		if (!Component._windowFocusReleaseAdded) {
 			window.addEventListener('mouseup', (event) => {
 				this._unsetFocusReleaseCallback(event);
@@ -78,24 +82,8 @@ export class Component {
 	/** Creates any child components in the HTML. It's separate from the constructor, because
 	 * the subclass needs to have its variables set for the child component attributes. */
 	protected createChildComponents(): void {
-		for (let i = 0; i < this._roots.length; i++) {
-			const root = this._roots[i];
-			if (root instanceof HTMLElement) {
-				// If the root or its children are components, create them.
-				const newRoots = this.setComponents(root);
-
-				// If new roots were created, replace the old root with them, and add on the old root's classes.
-				if (newRoots.length > 0) {
-					this._roots.splice(i, 1, ...newRoots);
-					for (const newRoot of newRoots) {
-						if (newRoot instanceof Element) {
-							newRoot.classList.add(...root.classList);
-						}
-					}
-					i += newRoots.length - 1;
-				}
-			}
-		}
+		// If the root or its children are components, create them.
+		this.setComponents(this._root);
 	}
 
 	/** Destroys the component when it is no longer needed. Call to clean up the object. */
@@ -131,9 +119,9 @@ export class Component {
 		}
 	}
 
-	/** Returns the root elements. */
-	protected roots(): Node[] {
-		return this._roots;
+	/** Returns the root element. */
+	protected root(): Element {
+		return this._root;
 	}
 
 	/** Returns true if this has an element with the id. */
@@ -209,17 +197,11 @@ export class Component {
 		const newComponent = new ComponentType(params);
 		// Create any child components that are within the html of the component.
 		newComponent.createChildComponents();
-		// For each root in the new component,
-		for (let i = 0; i < newComponent._roots.length; i++) {
-			// Set the event handlers for the roots if they are elements.
-			// It happens after the child components have been created, because the root nodes may have changed.
-			const root = newComponent._roots[i];
-			if (root instanceof Element) {
-				newComponent.setEventHandlersFromElemAttributes(root);
-			}
-			// Insert the new component root in the right spot of this component.
-			parentNode.insertBefore(root, beforeChild);
-		}
+		// Set the event handlers for the root.
+		// It happens after the child components have been created, because the root node may have changed.
+		newComponent.setEventHandlersFromElemAttributes(newComponent._root);
+		// Insert the new component root in the right spot of this component.
+		parentNode.insertBefore(this._root, beforeChild);
 		// Add it to the list of components.
 		this._components.add(newComponent);
 		// Set the id, if there is one.
@@ -240,10 +222,8 @@ export class Component {
 		}
 		this._components.delete(component);
 
-		// Remove the component's root nodes.
-		for (let i = 0; i < component._roots.length; i++) {
-			component._roots[i].parentNode?.removeChild(component._roots[i]);
-		}
+		// Remove the component's root node.
+		component._root.parentNode?.removeChild(component._root);
 
 		// Call its destroy function.
 		component.destroy();
@@ -280,7 +260,7 @@ export class Component {
 
 	/** Goes through all of the tags, and for any that match a component in the registry, sets it with
 	 * the matching component. Goes through all of the children also. */
-	private setComponents(element: Element): Node[] {
+	private setComponents(element: Element): void {
 		const registryEntry = Component._registry.get(element.tagName.toLowerCase());
 		// The element is a component ready to be instantiated.
 		if (registryEntry !== undefined) {
@@ -335,27 +315,21 @@ export class Component {
 			}
 			element.innerHTML = '';
 			// Create the new component and insert it right before the element.
-			const newComponent = this.insertComponent(registryEntry.ComponentType, element.parentNode!, element, params);
+			this.insertComponent(registryEntry.ComponentType, element.parentNode!, element, params);
 			element.parentNode!.removeChild(element);
-			// Return the new component's roots.
-			// Used to determine if the new component's roots are now this component's roots.
-			return newComponent._roots;
 		}
 		else {
 			for (const child of element.children) {
 				this.setComponents(child);
 			}
-			return [];
 		}
 	}
 
 	/** Unsets all of the components that are in the node. Used before setting new HTML. */
 	private unsetComponents(element: Element): void {
 		for (const component of this._components) {
-			for (const root of component._roots) {
-				if (element.contains(root)) {
-					this.deleteComponent(component);
-				}
+			if (element.contains(this._root)) {
+				this.deleteComponent(component);
 			}
 		}
 	}
@@ -488,8 +462,8 @@ export class Component {
 	/** The id of the component. */
 	private _id = '';
 
-	/** The root elements. */
-	private _roots: Node[];
+	/** The root element. */
+	private _root: Element;
 
 	/** The set of child components. */
 	private _components: Set<Component> = new Set();

@@ -22,11 +22,6 @@ export abstract class App extends Component {
 	constructor() {
 		super(new Component.Params());
 
-		// Append the roots to the document body.
-		for (let i = 0; i < this.roots().length; i++) {
-			document.body.appendChild(this.roots()[i]);
-		}
-
 		// Make the app global.
 		window.app = this;
 	}
