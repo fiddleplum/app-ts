@@ -22,9 +22,6 @@ export abstract class SimpleApp extends App {
 		this.pages.set(pageName, PageClass);
 	}
 
-	/** Shows a message to the user. */
-	protected abstract showMessage(_messageHtml: string): void;
-
 	/** Gets the page element. */
 	protected abstract getPageElement(): HTMLElement;
 
@@ -32,23 +29,20 @@ export abstract class SimpleApp extends App {
 	private async _processQuery(query: Router.Query): Promise<void> {
 		const pageName = query.page !== undefined ? query.page : '';
 		const Page = this.pages.get(pageName);
+		// Invalid page, do nothing.
 		if (Page === undefined) {
-			this.showMessage('Page "' + pageName + '" not found.');
 			return;
 		}
 
 		// If it's the same page, do nothing.
-		if (this.page !== null && this.page.constructor === Page) {
+		if (this.page !== undefined && this.page.constructor === Page) {
 			return;
 		}
-
-		// Clear any previous messages.
-		this.showMessage('');
 
 		// Hide and delete old page.
 		const pageElement = this.getPageElement();
 		await ShowHide.hide(pageElement);
-		if (this.page !== null) {
+		if (this.page !== undefined) {
 			this.deleteComponent(this.page);
 		}
 
@@ -68,7 +62,7 @@ export abstract class SimpleApp extends App {
 	private pages: Map<string, typeof SimpleApp.Page> = new Map();
 
 	/** The current page. */
-	private page: SimpleApp.Page | null = null;
+	private page: SimpleApp.Page | undefined = undefined;
 }
 
 SimpleApp.register();
