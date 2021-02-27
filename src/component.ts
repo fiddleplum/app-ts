@@ -332,6 +332,7 @@ export class Component {
 	/** Extracts the event handlers of the element as a mapping of strings to this-bound functions. */
 	private extractEventHandlers(element: Element): Map<string, (componentOrEvent: Component | Event) => void> {
 		const eventHandlers: Map<string, (componentOrEvent: Component | Event) => void> = new Map();
+		const attributesToRemove: string[] = [];
 		// Get the attributes and event handlers.
 		for (const attribute of element.attributes) {
 			const attributeName = attribute.name.toLowerCase();
@@ -340,7 +341,7 @@ export class Component {
 					const value = this[attribute.value];
 					if (value instanceof Function) {
 						eventHandlers.set(attributeName.substring(2), value.bind(this));
-						element.removeAttribute(attributeName);
+						attributesToRemove.push(attribute.name);
 					}
 					else {
 						throw new Error(`In ${this}, the value of the event handler ${attributeName} of component element ${element.id} is not a function of ${this.constructor.name}.`);
@@ -351,6 +352,11 @@ export class Component {
 				}
 			}
 		}
+		// Remove the attributes that were processed.
+		for (const attributeName of attributesToRemove) {
+			element.removeAttribute(attributeName);
+		}
+		// Return the processed event handlers.
 		return eventHandlers;
 	}
 
