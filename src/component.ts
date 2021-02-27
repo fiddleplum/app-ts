@@ -18,7 +18,9 @@ export class Component {
 		this._registryEntry = registryEntry;
 
 		// Set the id of the component.
-		this._id = params.id;
+		if (params.id !== '') {
+			this._id = params.id;
+		}
 
 		// Create the template and add the html content as the root node. It uses the most descendant ancestor with html.
 		let registryEntryWithHTML = registryEntry;
@@ -49,7 +51,9 @@ export class Component {
 		}
 
 		// Set the root id.
-		this._root.id = params.id;
+		if (params.id !== '') {
+			this._root.id = params.id;
+		}
 
 		// Set the elements that are child components and the event handlers.
 		this.setComponentsAndEventHandlers(this._root);
