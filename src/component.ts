@@ -430,9 +430,13 @@ export class Component {
 			x = event.clientX;
 			y = event.clientY;
 		}
-		else {
+		else if (event.touches.length > 0) {
 			x = event.touches[0].clientX;
 			y = event.touches[0].clientY;
+		}
+		else {
+			x = NaN;
+			y = NaN;
 		}
 		if (Component._focusReleaseCallback !== undefined) {
 			// Call the callback.
