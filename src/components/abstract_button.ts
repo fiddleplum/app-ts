@@ -62,4 +62,10 @@ export abstract class AbstractButton extends Component {
 
 AbstractButton.html = /* html */`<div onmousedown="_mouseTouchDown" ontouchstart="_mouseTouchDown" onmousemove="_mouseMove" onmouseout="_mouseOut"></div>`;
 
+AbstractButton.css = /* css */`
+	.AbstractButton {
+		cursor: pointer;
+	}
+	`;
+
 AbstractButton.register();
