@@ -17,6 +17,9 @@ export class Component {
 		}
 		this._registryEntry = registryEntry;
 
+		// Set the id of the component.
+		this._id = params.id;
+
 		// Create the template and add the html content as the root node. It uses the most descendant ancestor with html.
 		let registryEntryWithHTML = registryEntry;
 		while (registryEntryWithHTML.ancestors.length > 1 && registryEntryWithHTML.html === '') {
@@ -120,6 +123,11 @@ export class Component {
 		else {
 			return componentName;
 		}
+	}
+
+	/** Gets the id of the component, if it was given one. */
+	get id(): string {
+		return this._id;
 	}
 
 	/** Returns the root element. */
@@ -429,6 +437,9 @@ export class Component {
 			document.body.classList.remove('no-select');
 		}
 	}
+
+	/** The id given by the parent component. */
+	private _id: string = '';
 
 	/** The root element. */
 	private _root: Element;
