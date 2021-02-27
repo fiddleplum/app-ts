@@ -39,7 +39,7 @@ export class Icon extends Component {
 			}
 			const svg = template.content.firstElementChild;
 			// Remove the old children.
-			const svgElement = this.element('svg', SVGElement);
+			const svgElement = this.root() as SVGElement;
 			while (svgElement.lastChild !== null) {
 				svgElement.removeChild(svgElement.lastChild);
 			}
@@ -60,7 +60,7 @@ export class Icon extends Component {
 }
 
 Icon.html = `
-	<svg id="svg"></svg>
+	<svg></svg>
 	`;
 
 Icon.register();

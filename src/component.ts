@@ -17,9 +17,6 @@ export class Component {
 		}
 		this._registryEntry = registryEntry;
 
-		// Set the id.
-		this._id = params.id;
-
 		// Create the template and add the html content as the root node. It uses the most descendant ancestor with html.
 		let registryEntryWithHTML = registryEntry;
 		while (registryEntryWithHTML.ancestors.length > 1 && registryEntryWithHTML.html === '') {
@@ -47,6 +44,9 @@ export class Component {
 			}
 			this._root = root;
 		}
+
+		// Set the root id.
+		this._root.id = params.id;
 
 		// Set the elements that are child components and the event handlers.
 		this.setComponentsAndEventHandlers(this._root);
@@ -113,7 +113,7 @@ export class Component {
 	/** Returns a string form of the component. */
 	toString(): string {
 		const componentName = this.constructor.name;
-		const id = this._id;
+		const id = this._root.id;
 		if (id !== '') {
 			return componentName + ' id:' + id;
 		}
@@ -224,8 +224,8 @@ export class Component {
 			return;
 		}
 		// Delete the component from the lists.
-		if (component._id !== '') {
-			this._idsToComponents.delete(component._id);
+		if (component._root.id !== '') {
+			this._idsToComponents.delete(component._root.id);
 		}
 		this._components.delete(component);
 
@@ -242,8 +242,8 @@ export class Component {
 		if (element.classList.contains('Component')) {
 			return;
 		}
-		// Set the id to element mapping.
-		if (element.id !== undefined && element.id !== '') {
+		// Set the id to element mapping. Ignore the root, since its id is assigned by the parent component.
+		if (element.id !== undefined && element.id !== '' && element !== this._root) {
 			if (this._idsToElements.has(element.id)) {
 				throw new Error(`In ${this}, the element with id ${element.id} is already used.`);
 			}
@@ -430,9 +430,6 @@ export class Component {
 		}
 	}
 
-	/** The id of the component. */
-	private _id = '';
-
 	/** The root element. */
 	private _root: Element;
 
@@ -487,7 +484,7 @@ Component.css = /*css*/`
 export namespace Component {
 	/** The params of an element that will become a component. */
 	export class Params {
-		/** The id of the component, if it has one. */
+		/** The id of the component, if it has one. The root's id is set to it. */
 		public id = '';
 
 		/** The attributes passed as if it were <Component attrib=''...>. All of the keys are lower case. */
