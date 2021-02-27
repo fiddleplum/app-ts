@@ -26,7 +26,7 @@ export class ToggleButton extends AbstractButton {
 			// Set the state.
 			this._pressed = true;
 			// Call the user press callback.
-			this._pressEventHandler();
+			this._pressEventHandler(this);
 		}
 		else {
 			// Remove the pressed class.
@@ -37,7 +37,7 @@ export class ToggleButton extends AbstractButton {
 			// Set the state.
 			this._pressed = false;
 			// Call the user release callback.
-			this._releaseEventHandler();
+			this._releaseEventHandler(this);
 		}
 	}
 

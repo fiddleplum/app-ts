@@ -28,14 +28,14 @@ export abstract class AbstractButton extends Component {
 		const root = this.element('root', HTMLDivElement);
 		root.classList.add('hovered');
 		const rect = root.getBoundingClientRect();
-		this._hoverEventHandler(event.clientX - rect.left, event.clientY - rect.top);
+		this._hoverEventHandler(this, event.clientX - rect.left, event.clientY - rect.top);
 	}
 
 	/** The event callback for when the mouseout happens. */
 	private _mouseOut(): void {
 		const root = this.element('root', HTMLDivElement);
 		root.classList.remove('hovered');
-		this._hoverEventHandler(Number.NaN, Number.NaN);
+		this._hoverEventHandler(this, Number.NaN, Number.NaN);
 	}
 
 	/** Returns true if the coordinates are over the button. */
@@ -49,13 +49,13 @@ export abstract class AbstractButton extends Component {
 	protected abstract _mouseTouchDown(): void;
 
 	/** The user press callback. */
-	protected _pressEventHandler: () => void = () => {};
+	protected _pressEventHandler: (button: AbstractButton) => void = () => {};
 
 	/** The user release callback. */
-	protected _releaseEventHandler: () => void = () => {};
+	protected _releaseEventHandler: (button: AbstractButton) => void = () => {};
 
 	/** The user hover callback. */
-	protected _hoverEventHandler: (x: number, y: number) => void = () => {};
+	protected _hoverEventHandler: (button: AbstractButton, x: number, y: number) => void = () => {};
 }
 
 AbstractButton.html = /* html */`<div id="root" onmousedown="_mouseTouchDown" ontouchstart="_mouseTouchDown" onmousemove="_mouseMove" onmouseout="_mouseOut"></div>`;

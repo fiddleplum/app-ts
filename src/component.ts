@@ -322,8 +322,8 @@ export class Component {
 	}
 
 	/** Extracts the event handlers of the element as a mapping of strings to this-bound functions. */
-	private extractEventHandlers(element: Element): Map<string, () => void> {
-		const eventHandlers: Map<string, () => void> = new Map();
+	private extractEventHandlers(element: Element): Map<string, (componentOrEvent: Component | Event) => void> {
+		const eventHandlers: Map<string, (componentOrEvent: Component | Event) => void> = new Map();
 		// Get the attributes and event handlers.
 		for (const attribute of element.attributes) {
 			const attributeName = attribute.name.toLowerCase();
@@ -490,8 +490,8 @@ export namespace Component {
 		/** The attributes passed as if it were <Component attrib=''...>. All of the keys are lower case. */
 		public attributes: Map<string, string> = new Map();
 
-		/** The event handlers passed as if it were <Component onevent=''...>. All of the keys are lower case, without the 'on' part. */
-		public eventHandlers: Map<string, () => void> = new Map();
+		/** The event handlers passed as if it were <Component onevent=''...>. All of the keys are lower case, without the 'on' part. The component param is the one that called the event handler. */
+		public eventHandlers: Map<string, (component: Component) => void> = new Map();
 
 		/** The children of the node as if it were <Component><child1/>...</Component>. */
 		public children: Node[] = [];

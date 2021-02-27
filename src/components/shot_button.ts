@@ -28,12 +28,12 @@ export class ShotButton extends AbstractButton {
 		// Add the pressed class.
 		root.classList.add('pressed');
 		// Call the user press callback.
-		this._pressEventHandler();
+		this._pressEventHandler(this);
 		setTimeout(() => {
 			// Remove the pressed class.
 			this.element('root', HTMLDivElement).classList.remove('pressed');
 			// Call the user release callback.
-			this._releaseEventHandler();
+			this._releaseEventHandler(this);
 		}, this._shotTime * 1000);
 	}
 
