@@ -9,7 +9,7 @@ export class ToggleButton extends AbstractButton {
 		const pressedValue = params.attributes.get('pressed');
 		if (pressedValue === 'true') {
 			// Add the pressed class.
-			this.element('root', HTMLDivElement).classList.add('pressed');
+			this.root.classList.add('pressed');
 			// Set the state.
 			this._pressed = true;
 		}
@@ -19,7 +19,7 @@ export class ToggleButton extends AbstractButton {
 	protected _mouseTouchDown(): void {
 		if (!this._pressed) {
 			// Add the pressed class.
-			this.element('root', HTMLDivElement).classList.add('pressed');
+			this.root.classList.add('pressed');
 			// Set the callback for when mouseup or touchend happens. It does nothing right now.
 			this.setFocusReleaseCallback(() => {
 			});
@@ -30,7 +30,7 @@ export class ToggleButton extends AbstractButton {
 		}
 		else {
 			// Remove the pressed class.
-			this.element('root', HTMLDivElement).classList.remove('pressed');
+			this.root.classList.remove('pressed');
 			// Set the callback for when mouseup or touchend happens. It does nothing right now.
 			this.setFocusReleaseCallback(() => {
 			});

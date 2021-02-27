@@ -20,18 +20,17 @@ export class ShotButton extends AbstractButton {
 		// Set the callback for when mouseup or touchend happens. It does nothing right now.
 		this.setFocusReleaseCallback(() => {
 		});
-		const root = this.element('root', HTMLDivElement);
-		if (root.classList.contains('pressed')) {
+		if (this.root.classList.contains('pressed')) {
 			// It's already pressed so do nothing until it releases.
 			return;
 		}
 		// Add the pressed class.
-		root.classList.add('pressed');
+		this.root.classList.add('pressed');
 		// Call the user press callback.
 		this._pressEventHandler(this);
 		setTimeout(() => {
 			// Remove the pressed class.
-			this.element('root', HTMLDivElement).classList.remove('pressed');
+			this.root.classList.remove('pressed');
 			// Call the user release callback.
 			this._releaseEventHandler(this);
 		}, this._shotTime * 1000);

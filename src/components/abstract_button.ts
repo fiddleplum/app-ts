@@ -21,27 +21,29 @@ export abstract class AbstractButton extends Component {
 		if (hoverEventHandler !== undefined) {
 			this._hoverEventHandler = hoverEventHandler;
 		}
+
+		// Add the children to the button.
+		for (const child of params.children) {
+			this.root.appendChild(child);
+		}
 	}
 
 	/** The event callback for when the mousemove happens. */
 	private _mouseMove(event: MouseEvent): void {
-		const root = this.element('root', HTMLDivElement);
-		root.classList.add('hovered');
-		const rect = root.getBoundingClientRect();
+		this.root.classList.add('hovered');
+		const rect = this.root.getBoundingClientRect();
 		this._hoverEventHandler(this, event.clientX - rect.left, event.clientY - rect.top);
 	}
 
 	/** The event callback for when the mouseout happens. */
 	private _mouseOut(): void {
-		const root = this.element('root', HTMLDivElement);
-		root.classList.remove('hovered');
+		this.root.classList.remove('hovered');
 		this._hoverEventHandler(this, Number.NaN, Number.NaN);
 	}
 
 	/** Returns true if the coordinates are over the button. */
 	protected _isOver(x: number, y: number): boolean {
-		const root = this.element('root', HTMLDivElement);
-		const rect = root.getBoundingClientRect();
+		const rect = this.root.getBoundingClientRect();
 		return rect.left <= x && x < rect.right && rect.top <= y && y < rect.bottom;
 	}
 
@@ -58,6 +60,6 @@ export abstract class AbstractButton extends Component {
 	protected _hoverEventHandler: (button: AbstractButton, x: number, y: number) => void = () => {};
 }
 
-AbstractButton.html = /* html */`<div id="root" onmousedown="_mouseTouchDown" ontouchstart="_mouseTouchDown" onmousemove="_mouseMove" onmouseout="_mouseOut"></div>`;
+AbstractButton.html = /* html */`<div onmousedown="_mouseTouchDown" ontouchstart="_mouseTouchDown" onmousemove="_mouseMove" onmouseout="_mouseOut"></div>`;
 
 AbstractButton.register();

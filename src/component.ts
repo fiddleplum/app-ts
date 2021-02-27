@@ -131,7 +131,7 @@ export class Component {
 	}
 
 	/** Returns the root element. */
-	protected root(): Element {
+	protected get root(): Element {
 		return this._root;
 	}
 
