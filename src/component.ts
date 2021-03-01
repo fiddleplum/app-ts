@@ -248,6 +248,22 @@ export class Component {
 		component.destroy();
 	}
 
+	/** Registers an event and uses the params to set a matching event handler. */
+	protected registerEvent(eventName: string, params: Component.Params): void {
+		const eventHandler = params.eventHandlers.get(eventName);
+		if (eventHandler !== undefined) {
+			this._eventHandlers.set(eventName, eventHandler);
+		}
+	}
+
+	/** Triggers an event, calling the appropriate event handler, with optional args. */
+	protected triggerEvent(eventName: string, ...args: any[]): void {
+		const eventHandler = this._eventHandlers.get(eventName);
+		if (eventHandler !== undefined) {
+			eventHandler(this, ...args);
+		}
+	}
+
 	/** Sets the ids for the element and its children, excluding components. */
 	private setIds(element: Element): void {
 		// Don't process child components.
@@ -467,6 +483,9 @@ export class Component {
 	/** The mapping of ids to child components. */
 	private _idsToComponents: Map<string, Component> = new Map();
 
+	/** The event handlers. */
+	private _eventHandlers: Map<string, (component: Component, ...args: any) => void> = new Map();
+
 	/** The registry entry. */
 	private _registryEntry: RegistryEntry;
 
@@ -516,7 +535,7 @@ export namespace Component {
 		public attributes: Map<string, string> = new Map();
 
 		/** The event handlers passed as if it were <Component onevent=''...>. All of the keys are lower case, without the 'on' part. The component param is the one that called the event handler. */
-		public eventHandlers: Map<string, (component: Component) => void> = new Map();
+		public eventHandlers: Map<string, (component: Component, ...args: any) => void> = new Map();
 
 		/** The children of the node as if it were <Component><child1/>...</Component>. */
 		public children: Node[] = [];

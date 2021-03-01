@@ -5,6 +5,25 @@
 
 # Design Decisions
 
+## Event Handlers and Parameters
+
+I'm running into an issue with event handlers on components. When I have many buttons, I may want them all to call the same function, but with different parameters. Those parameters might be strings, numbers, or booleans. The question is, how do I allow it?
+
+Right now there are no parameters passed, and the entire onwhatever attribute value is used as the function name to look up. But what if instead I allowed the user to put JavaScript in there? Then I would eval it in the 'this' context. This would allow more things to be in there. It would be a little tricky, though, because then the child component itself couldn't pass its own parameters in. Is there a way to allow custom JavaScript and allow the user to pass things in?
+
+I can pass in the component that triggered the event. Then I could have other code that would do different things depending on the component that triggered it. This is what regular JavaScript events do, so I would be in line with regular standards.
+
+I think I'm leaning toward the idea of passing in the component always as the first param:
+* It avoids eval and any possible issues with it.
+* It makes any more complex logic be in JavaScript and not in the HTML.
+* It allows for more complex logic when component events are triggered.
+* It allows for components to pass their own params to the event callbacks.
+* It allows the paragraph code refactoring below.
+* It mirrors regular JavaScript events.
+
+Is there a way I can move all of the callback handler overhead into component? See AbstractButton. I could have a 'registerEvent(name)' function and a 'triggerEvent' function. They would automatically search the
+params.eventHandlers, create a saved callback, and then call the callback when 'triggerEvent' is called, along with the triggering component and any additional params in the triggerEvent(...params) call.
+
 ## Parent Values in Child Component Attributes
 
 When a component P has a child component C, if C is passed an attribute param A that is a property of P, then one of two things must happen:
