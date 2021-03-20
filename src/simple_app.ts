@@ -73,5 +73,8 @@ SimpleApp.setAppClass();
 
 export namespace SimpleApp {
 	export class Page extends Component {
+		constructor() {
+			super(new Component.Params());
+		}
 	}
 }

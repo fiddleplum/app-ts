@@ -1,5 +1,4 @@
-import { UniqueIds } from './unique_ids';
-import { JSONType } from './json_type';
+import { UniqueIds, JSONType } from 'pine-lib';
 
 /** A message sending and receiving WebSocket interface. */
 export class WS {

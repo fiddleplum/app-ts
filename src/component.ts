@@ -1,4 +1,3 @@
-import { isIn } from './is_in';
 import { App } from './app';
 
 /**
@@ -357,8 +356,8 @@ export class Component {
 		for (const attribute of element.attributes) {
 			const attributeName = attribute.name.toLowerCase();
 			if (attributeName.startsWith('on')) {
-				if (isIn(this, attribute.value)) {
-					const value = this[attribute.value];
+				if (attribute.value in this) {
+					const value = (this as Record<string, unknown>)[attribute.value];
 					if (value instanceof Function) {
 						eventHandlers.set(attributeName.substring(2), value.bind(this));
 						attributesToRemove.push(attribute.name);

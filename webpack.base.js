@@ -1,4 +1,4 @@
-const TSConfigPathsWebpackPlugin = require('tsconfig-paths-webpack-plugin');
+// const TSConfigPathsWebpackPlugin = require('tsconfig-paths-webpack-plugin');
 
 module.exports = {
 	entry: './src/app.ts',
@@ -6,8 +6,8 @@ module.exports = {
 		filename: 'script.js'
 	},
 	resolve: {
-		extensions: ['.ts', '.js'],
-		plugins: [new TSConfigPathsWebpackPlugin()]
+		extensions: ['.ts', '.js']
+		// plugins: [new TSConfigPathsWebpackPlugin()]
 	},
 	devServer:{
 		contentBase: 'src',
