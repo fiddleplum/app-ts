@@ -44,31 +44,26 @@ export class WS {
 						throw new Error('No active send waiting for response.');
 					}
 
-					// Get the data of the response.
-					const data = response.data;
-					if (typeof data !== 'object' || data === null || Array.isArray(data)) {
-						throw new Error('Response.data must be an object.');
-					}
-
-					// If the response was not a success, call reject the promise function.
-					if (typeof data.success !== 'boolean') {
-						throw new Error('Response.data.success must be a boolean.');
-					}
-					if (data.success === false) {
-						if (typeof data.error !== 'string') {
-							throw new Error('Response.data.error must be a string when response.data.success is false.');
-						}
-						promiseFunctions.reject(new Error(data.error));
-					}
-
 					// Remove the id from the actively sending message list and release the id.
 					this.activeSends.delete(id);
 					this.uniqueIds.release(id);
 
-					// Call the resolve function without the success and error properties.
-					delete data.success;
-					delete data.error;
-					promiseFunctions.resolve(data);
+					// If the response was not a success, call reject the promise function.
+					const success = response.success;
+					if (typeof success !== 'boolean') {
+						throw new Error('Response.success must be a boolean.');
+					}
+					if (success === false) {
+						const error = response.error;
+						if (typeof error !== 'string') {
+							throw new Error('Response.error must be a string when response.success is false.');
+						}
+						promiseFunctions.reject(new Error(error));
+					}
+					else {
+						// Call the resolve function.
+						promiseFunctions.resolve(response.data);
+					}
 				}
 				catch (error) {
 					console.log('Error while receiving websocket message.');
@@ -108,12 +103,12 @@ export class WS {
 	}
 
 	/** Sends the JSON data along the web socket. Returns a promise resolving with response JSON data. */
-	send(data: JSONType): Promise<{ [prop: string]: (JSONType | undefined) }> {
+	send(data: JSONType): Promise<JSONType | void> {
 		if (this.webSocket === undefined || this.webSocket.readyState !== WebSocket.OPEN) {
 			throw new Error('The web socket is not yet connected.');
 		}
 		console.log('ws.send ' + JSON.stringify(data));
-		return new Promise<{ [prop: string]: (JSONType | undefined) }>((resolve, reject) => {
+		return new Promise<JSONType | void>((resolve, reject) => {
 			const id = this.uniqueIds.get();
 			this.activeSends.set(id, { resolve, reject });
 			this.webSocket!.send(JSON.stringify({
@@ -133,18 +128,7 @@ export class WS {
 	private activeSends: Map<number, PromiseFunctions> = new Map();
 }
 
-export namespace WS {
-	export interface ResponseData {
-		id: number;
-		data: {
-			success: boolean;
-			error: string | undefined;
-			data: JSONType | undefined;
-		}
-	}
-}
-
 export class PromiseFunctions {
-	resolve: (data: { [prop: string]: (JSONType | undefined) }) => void = () => {};
+	resolve: (data: JSONType | void) => void = () => {};
 	reject: (error: Error) => void = () => {}
 }
