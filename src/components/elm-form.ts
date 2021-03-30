@@ -8,7 +8,7 @@ export class ElmForm extends Component {
 		// Get the label width.
 		const labelWidth = params.attributes.get('labelwidth');
 		if (labelWidth === undefined) {
-			throw new Error('LabelWidth is required.');
+			throw new Error('LabelWidth attribute is required in ElmForm.');
 		}
 
 		let html = '';
@@ -17,25 +17,40 @@ export class ElmForm extends Component {
 				if (child.tagName === 'ENTRY') {
 					const label = child.getAttribute('label');
 					if (label === null) {
-						throw new Error('Label is required in the entry.');
+						throw new Error('Label attribute is required in the entry.');
 					}
 					const type = child.getAttribute('type');
 					if (type === null) {
-						throw new Error('Type is required in the entry.');
+						throw new Error('Type attribute is required in the entry.');
 					}
 					if (type !== 'submit') {
 						const name = child.getAttribute('name');
 						if (name === null) {
-							throw new Error('Name is required in the entry.');
+							throw new Error('Name attribute is required in the entry.');
 						}
 						if (this._entries.has(name)) {
 							throw new Error('Only one entry of each name allowed.');
 						}
 						if (type === 'text') {
-							html += `<p><label for="${name}" style="width: ${labelWidth};">${label}:</label><input id="${name}" type="text" style="width: calc(100%-${labelWidth});"></input></p>`;
+							html += `<p><label for="${name}" style="width: ${labelWidth};">${label}:</label><input id="${name}" type="text" style="width: calc(100% - ${labelWidth});"></input></p>`;
 						}
 						else if (type === 'password') {
-							html += `<p><label for="${name}" style="width: ${labelWidth};">${label}:</label><input id="${name}" type="password" style="width: calc(100%-${labelWidth});"></input></p>`;
+							html += `<p><label for="${name}" style="width: ${labelWidth};">${label}:</label><input id="${name}" type="password" style="width: calc(100% - ${labelWidth});"></input></p>`;
+						}
+						else if (type === 'choice' || type === 'multichoice') {
+							html += `<p><label for="${name}" style="width: ${labelWidth};">${label}:</label><select id="${name}" style="width: calc(100% - ${labelWidth});"${type === 'multichoice' ? ' multiple' : ''}>`;
+							for (const choiceElement of child.children) {
+								if (choiceElement.tagName !== 'CHOICE') {
+									throw new Error(`Non-choice element found in choice selection.`);
+								}
+								const choiceValue = choiceElement.getAttribute('value');
+								if (choiceValue === null) {
+									throw new Error(`Value attribute is required in choice element.`);
+								}
+								const choiceLabel = choiceElement.innerHTML;
+								html += `<option value="${choiceValue}">${choiceLabel}</option>`;
+							}
+							html += `</select></p>`;
 						}
 						else {
 							throw new Error(`Unknown entry type "${type}" found.`);
@@ -112,21 +127,6 @@ ElmForm.html = /* html */`
 	`;
 
 ElmForm.css = /* css */`
-	.ElmForm {
-		width: 100%;
-		max-width: 15rem;
-		margin: 0 auto;
-	}
-	.ElmForm.disabled {
-		pointer-events: none;
-		opacity: 0.4;
-	}
-	.ElmForm label {
-		width: 5rem;
-	}
-	.ElmForm input {
-		width: calc(100% - 5rem);
-	}
 	.ElmForm #submit {
 		width: 100%;
 	}
