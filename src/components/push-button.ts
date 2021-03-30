@@ -1,4 +1,4 @@
-import { AbstractButton } from './abstract_button';
+import { AbstractButton } from './abstract-button';
 
 export class PushButton extends AbstractButton {
 	/** The event callback for when the mousedown or touchstart happens. */

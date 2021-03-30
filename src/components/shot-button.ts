@@ -1,5 +1,5 @@
 import { Component } from '../component';
-import { AbstractButton } from './abstract_button';
+import { AbstractButton } from './abstract-button';
 
 export class ShotButton extends AbstractButton {
 	constructor(params: Component.Params) {

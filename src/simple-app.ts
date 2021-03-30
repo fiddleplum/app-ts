@@ -1,5 +1,5 @@
 import { App } from './app';
-import { ShowHide } from './show_hide';
+import { ShowHide } from './show-hide';
 import { Component } from './component';
 import { Router } from './router';
 
