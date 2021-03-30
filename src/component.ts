@@ -55,7 +55,7 @@ export class Component {
 		}
 
 		// Set the elements that are child components and the event handlers.
-		this.setComponentsAndEventHandlers(this._root);
+		this.setComponentsAndEventHandlers(this._root, this);
 
 		// Set the id-to-element mapping of the root and its children.
 		this.setIds(this._root);
@@ -199,7 +199,7 @@ export class Component {
 	}
 
 	/** Inserts html at the end of the parent or before a child node. */
-	protected insertHtml(parent: Element, before: Node | null, html: string): void {
+	protected insertHtml(parent: Element, before: Node | null, html: string, context: Component = this): void {
 		html = html.replace(/>[\t\n]+</g, '><');
 		const templateElem = document.createElement('template');
 		templateElem.innerHTML = html;
@@ -207,7 +207,7 @@ export class Component {
 			const newNode = child.cloneNode(true);
 			parent.insertBefore(newNode, before);
 			if (newNode instanceof Element) {
-				this.setComponentsAndEventHandlers(newNode);
+				this.setComponentsAndEventHandlers(newNode, context);
 				this.setIds(newNode);
 			}
 		}
@@ -297,7 +297,7 @@ export class Component {
 
 	/** Goes through all of the tags, and for any that match a component in the registry, sets it with
 	 *  the matching component. Goes through all of the children also. */
-	private setComponentsAndEventHandlers(element: Element): void {
+	private setComponentsAndEventHandlers(element: Element, context: Component): void {
 		const registryEntry = Component._registry.get(element.tagName.toLowerCase());
 		// The element is a component ready to be instantiated. It can't be the root or a reserved tag.
 		if (element !== this._root && element instanceof HTMLUnknownElement && registryEntry !== undefined) {
@@ -308,7 +308,7 @@ export class Component {
 			params.id = element.id;
 
 			// Extract the event handlers from the attributes.
-			const eventHandlers = this.extractEventHandlers(element);
+			const eventHandlers = this.extractEventHandlers(element, context);
 			for (const entry of eventHandlers) {
 				params.eventHandlers.set(entry[0], entry[1]);
 			}
@@ -335,7 +335,7 @@ export class Component {
 		}
 		else {
 			// Extract the event handlers from the attributes and add the event listeners.
-			const eventHandlers = this.extractEventHandlers(element);
+			const eventHandlers = this.extractEventHandlers(element, context);
 			for (const entry of eventHandlers) {
 				// Add the event listener.
 				element.addEventListener(entry[0], entry[1]);
@@ -343,31 +343,31 @@ export class Component {
 
 			// Go through the child elements.
 			for (const child of element.children) {
-				this.setComponentsAndEventHandlers(child);
+				this.setComponentsAndEventHandlers(child, context);
 			}
 		}
 	}
 
 	/** Extracts the event handlers of the element as a mapping of strings to this-bound functions. */
-	private extractEventHandlers(element: Element): Map<string, (componentOrEvent: Component | Event) => void> {
+	private extractEventHandlers(element: Element, context: Component): Map<string, (componentOrEvent: Component | Event) => void> {
 		const eventHandlers: Map<string, (componentOrEvent: Component | Event) => void> = new Map();
 		const attributesToRemove: string[] = [];
 		// Get the attributes and event handlers.
 		for (const attribute of element.attributes) {
 			const attributeName = attribute.name.toLowerCase();
 			if (attributeName.startsWith('on')) {
-				if (attribute.value in this) {
-					const value = (this as Record<string, unknown>)[attribute.value];
+				if (attribute.value in context) {
+					const value = (context as Record<string, unknown>)[attribute.value];
 					if (value instanceof Function) {
-						eventHandlers.set(attributeName.substring(2), value.bind(this));
+						eventHandlers.set(attributeName.substring(2), value.bind(context));
 						attributesToRemove.push(attribute.name);
 					}
 					else {
-						throw new Error(`In ${this}, the value of the event handler ${attributeName} of component element ${element.id} is not a function of ${this.constructor.name}.`);
+						throw new Error(`In ${context}, the value of the event handler ${attributeName} of component element ${element.id} is not a function of ${context.constructor.name}.`);
 					}
 				}
 				else {
-					throw new Error(`In ${this} , the value of the event handler ${attributeName} of component element ${element.id} is not in ${this.constructor.name}.`);
+					throw new Error(`In ${context} , the value of the event handler ${attributeName} of component element ${element.id} is not in ${context.constructor.name}.`);
 				}
 			}
 		}
