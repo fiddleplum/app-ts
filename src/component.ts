@@ -328,7 +328,6 @@ export class Component {
 			// Get the children and clear them.
 			for (const child of element.childNodes) {
 				params.children.push(child);
-				element.removeChild(child);
 			}
 			element.innerHTML = '';
 
