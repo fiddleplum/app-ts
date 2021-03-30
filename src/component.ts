@@ -304,6 +304,9 @@ export class Component {
 			// Create the params.
 			const params = new Component.Params();
 
+			// Set the parent.
+			params.parent = this;
+
 			// Set the id.
 			params.id = element.id;
 
@@ -527,6 +530,9 @@ Component.css = /*css*/`
 export namespace Component {
 	/** The params of an element that will become a component. */
 	export class Params {
+		/** The parent component. */
+		public parent: Component | null = null;
+
 		/** The id of the component, if it has one. The root's id is set to it. */
 		public id = '';
 
