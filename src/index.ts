@@ -11,3 +11,4 @@ export * from './components/icon';
 export * from './components/push_button';
 export * from './components/shot_button';
 export * from './components/toggle_button';
+export * from './components/elm-form';
