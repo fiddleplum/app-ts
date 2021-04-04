@@ -45,4 +45,6 @@ export class ToggleButton extends AbstractButton {
 	private _pressed: boolean = false;
 }
 
+ToggleButton.html = /* html */`<span><input type="checkbox" /><label class="no-select"></label></span>`;
+
 ToggleButton.register();
