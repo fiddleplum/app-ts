@@ -365,11 +365,11 @@ export class Component {
 						attributesToRemove.push(attribute.name);
 					}
 					else {
-						throw new Error(`In ${context}, the value of the event handler ${attributeName} of component element ${element.id} is not a function of ${context.constructor.name}.`);
+						throw new Error(`In ${context}, the value "${attribute.value}" of the event handler ${attributeName} of component element ${element.id} is not a function of ${context.constructor.name}.`);
 					}
 				}
 				else {
-					throw new Error(`In ${context} , the value of the event handler ${attributeName} of component element ${element.id} is not in ${context.constructor.name}.`);
+					throw new Error(`In ${context}, the value "${attribute.value}" of the event handler "${attributeName}" of component element ${element.id} is not in ${context.constructor.name}.`);
 				}
 			}
 		}
