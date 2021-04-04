@@ -37,8 +37,13 @@ export class ElmForm extends Component {
 						else if (type === 'password') {
 							html += `<p><label for="${name}" style="width: ${labelWidth};">${label}:</label><input id="${name}" type="password" style="width: calc(100% - ${labelWidth});"></input></p>`;
 						}
-						else if (type === 'choice' || type === 'multichoice') {
-							html += `<p><label for="${name}" style="width: ${labelWidth};">${label}:</label><select id="${name}" style="width: calc(100% - ${labelWidth});"${type === 'multichoice' ? ' multiple' : ''}>`;
+						else if (type === 'choice') {
+							let multi = false;
+							if (child.getAttribute('multi') !== undefined) {
+								multi = true;
+							}
+							html += `<p>${label}</p>`;
+							html += `<p class="choice">`;
 							for (const choiceElement of child.children) {
 								if (choiceElement.tagName !== 'CHOICE') {
 									throw new Error(`Non-choice element found in choice selection.`);
@@ -48,7 +53,22 @@ export class ElmForm extends Component {
 									throw new Error(`Value attribute is required in choice element.`);
 								}
 								const choiceLabel = choiceElement.innerHTML;
-								html += `<option value="${choiceValue}">${choiceLabel}</option>`;
+								html += `<button>${choiceLabel}</button>`;
+							}
+							html += `</p>`;
+						}
+						else if (type === 'select' || type === 'multiselect') {
+							html += `<p><label for="${name}" style="width: ${labelWidth};">${label}:</label><select id="${name}" style="width: calc(100% - ${labelWidth});"${type === 'multiselect' ? ' multiple' : ''}>`;
+							for (const optionElement of child.children) {
+								if (optionElement.tagName !== 'OPTION') {
+									throw new Error(`Non-option element found in option selection.`);
+								}
+								const optionValue = optionElement.getAttribute('value');
+								if (optionValue === null) {
+									throw new Error(`Value attribute is required in option element.`);
+								}
+								const optionLabel = optionElement.innerHTML;
+								html += `<option value="${optionValue}">${optionLabel}</option>`;
 							}
 							html += `</select></p>`;
 						}
@@ -127,6 +147,14 @@ ElmForm.html = /* html */`
 	`;
 
 ElmForm.css = /* css */`
+	.ElmForm p.choice {
+		margin-top: 0.25rem;
+		text-align: center;
+	}
+	.ElmForm p.choice button {
+		margin-left: .5rem;
+		margin-right: .5rem;
+	}
 	.ElmForm #submit {
 		width: 100%;
 	}
