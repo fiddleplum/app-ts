@@ -8,6 +8,13 @@ export class Icon extends Component {
 		super(params);
 
 		// Set the source from the attributes.
+		const alt = params.attributes.get('alt');
+		if (alt === undefined) {
+			throw new Error(`${this} ${this.id}: All icons must have alt attribute. It can be empty if the image is decorational.`);
+		}
+		this.root.setAttribute('alt', alt);
+
+		// Set the source from the attributes.
 		const srcValue = params.attributes.get('src');
 		if (srcValue !== undefined) {
 			this._src = srcValue;
