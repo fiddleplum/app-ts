@@ -1,50 +1,42 @@
 import { Component } from '../component';
 
+/** An easy-to-use form. */
 export class ElmForm extends Component {
 	/** Creates the component. */
 	constructor(params: Component.Params) {
 		super(params);
 
-		// Get the label width.
-		const labelWidth = params.attributes.get('labelwidth');
-		if (labelWidth === undefined) {
-			throw new Error('LabelWidth attribute is required in ElmForm.');
-		}
-
 		let html = '';
-		for (const child of params.children) {
-			if (child instanceof HTMLElement) {
-				if (child.tagName === 'ENTRY') {
-					const label = child.getAttribute('label');
-					if (label === null) {
-						throw new Error('Label attribute is required in the entry.');
-					}
-					const type = child.getAttribute('type');
+		for (const elem of params.children) {
+			if (elem instanceof HTMLElement) {
+				if (elem.tagName === 'ENTRY') {
+					const type = elem.getAttribute('type');
 					if (type === null) {
 						throw new Error('Type attribute is required in the entry.');
 					}
 					if (type !== 'submit') {
-						const name = child.getAttribute('name');
+						const name = elem.getAttribute('name');
 						if (name === null) {
 							throw new Error('Name attribute is required in the entry.');
 						}
-						if (this._entries.has(name)) {
+						if (this._entryNames.has(name)) {
 							throw new Error('Only one entry of each name allowed.');
 						}
+						let value = elem.getAttribute('value');
+						if (value === null) {
+							value = '';
+						}
+						const width = elem.getAttribute('width');
+						const widthStyle = width !== null ? ` style="width: ${width}"` : '';
+						html += `<span id="${name}" class="${type} entry">`;
 						if (type === 'text') {
-							html += `<p><label for="${name}" style="width: ${labelWidth};">${label}:</label><input id="${name}" type="text" style="width: calc(100% - ${labelWidth});"></input></p>`;
+							html += `<input name="${name}" type="text" value="${value}"${widthStyle}></input>`;
 						}
 						else if (type === 'password') {
-							html += `<p><label for="${name}" style="width: ${labelWidth};">${label}:</label><input id="${name}" type="password" style="width: calc(100% - ${labelWidth});"></input></p>`;
+							html += `<input name="${name}" type="password" value="${value}"${widthStyle}></input>`;
 						}
 						else if (type === 'choice') {
-							let multi = false;
-							if (child.getAttribute('multi') !== undefined) {
-								multi = true;
-							}
-							html += `<p>${label}</p>`;
-							html += `<p class="choice">`;
-							for (const choiceElement of child.children) {
+							for (const choiceElement of elem.children) {
 								if (choiceElement.tagName !== 'CHOICE') {
 									throw new Error(`Non-choice element found in choice selection.`);
 								}
@@ -52,83 +44,141 @@ export class ElmForm extends Component {
 								if (choiceValue === null) {
 									throw new Error(`Value attribute is required in choice element.`);
 								}
-								const choiceLabel = choiceElement.innerHTML;
-								html += `<button>${choiceLabel}</button>`;
+								const checked = choiceValue === value;
+								const label = choiceElement.innerHTML;
+								html += `
+									<input id="${name}-${choiceValue}" type="radio" name="${name}" value="${choiceValue}"${checked ? ' checked' : ''}${widthStyle}></input>
+									<label for="${name}-${choiceValue}">${label}</label>
+									`;
 							}
-							html += `</p>`;
 						}
-						else if (type === 'select' || type === 'multiselect') {
-							html += `<p><label for="${name}" style="width: ${labelWidth};">${label}:</label><select id="${name}" style="width: calc(100% - ${labelWidth});"${type === 'multiselect' ? ' multiple' : ''}>`;
-							for (const optionElement of child.children) {
-								if (optionElement.tagName !== 'OPTION') {
+						else if (type === 'dropdown') {
+							const multiple = elem.getAttribute('multiple');
+							html += `<select name="${name}"${multiple !== null ? ' multiple' : ''}>`;
+							for (const choiceElement of elem.children) {
+								if (choiceElement.tagName !== 'CHOICE') {
 									throw new Error(`Non-option element found in option selection.`);
 								}
-								const optionValue = optionElement.getAttribute('value');
-								if (optionValue === null) {
-									throw new Error(`Value attribute is required in option element.`);
+								const choiceValue = choiceElement.getAttribute('value');
+								if (choiceValue === null) {
+									throw new Error(`Value attribute is required in choice element.`);
 								}
-								const optionLabel = optionElement.innerHTML;
-								html += `<option value="${optionValue}">${optionLabel}</option>`;
+								const selected = choiceValue === value;
+								const label = choiceElement.innerHTML;
+								html += `<option id="${name}-${choiceValue}" value="${choiceValue}"${selected ? ' selected' : ''}>${label}</option>`;
 							}
-							html += `</select></p>`;
+							html += `</select>`;
+						}
+						else if (type === 'toggle') {
+							const label = elem.innerHTML;
+							html += `
+								<input id="${name}-input" type="checkbox" name="${name}"${value === 'true' ? ' checked' : ''}></input>
+								<label for="${name}-input"${widthStyle}>${label}</label>`;
 						}
 						else {
 							throw new Error(`Unknown entry type "${type}" found.`);
 						}
-						this._entries.add(name);
+						html += `</span>`;
+						this._entryNames.add(name);
 					}
 					else {
-						if (this._entries.has('submit')) {
-							throw new Error('Only one submit button allowed.');
-						}
-						const action = child.getAttribute('action');
+						const action = elem.getAttribute('action');
 						if (action === null) {
 							throw new Error('Action is required in the submit entry.');
 						}
-						html += `<p><button id="submit" onclick="${action}">${label}</button></p>`;
+						html += `<button class="submit" onclick="${action}">${elem.innerHTML}</button>`;
 						html += `<p id="message"></p>`;
-						this._entries.add('submit');
 					}
 				}
 				else {
-					html += child.outerHTML;
+					html += elem.outerHTML;
 				}
 			}
 		}
 		this.insertHtml(this.root, null, html, params.parent ?? undefined);
 	}
 
+	/** Gets the current input values as a map. Dropdowns with multiple selections are separated by commas. */
 	getValues(): Map<string, string | boolean> {
 		const values: Map<string, string | boolean> = new Map();
-		for (const entry of this._entries) {
-			const entryElement = this.element(entry, HTMLElement);
-			if (entryElement instanceof HTMLInputElement
-				|| entryElement instanceof HTMLSelectElement
-				|| entryElement instanceof HTMLTextAreaElement) {
-				if (entryElement instanceof HTMLInputElement && entryElement.getAttribute('type') === 'checkbox') {
-					values.set(entry, entryElement.checked);
+		for (const entry of this._entryNames) {
+			const spanElem = this.element(entry, HTMLElement);
+			if (spanElem.classList.contains('text') || spanElem.classList.contains('password')) {
+				values.set(entry, spanElem.querySelector('input')!.value);
+			}
+			else if (spanElem.classList.contains('choice')) {
+				const choiceElems = spanElem.querySelectorAll('input');
+				for (const choiceElem of choiceElems) {
+					if (choiceElem.checked) {
+						values.set(entry, choiceElem.value);
+					}
 				}
-				else {
-					values.set(entry, entryElement.value);
-				}
+			}
+			else if (spanElem.classList.contains('dropdown')) {
+				values.set(entry, spanElem.querySelector('select')!.value);
+			}
+			else if (spanElem.classList.contains('toggle')) {
+				values.set(entry, spanElem.querySelector('input')!.checked);
 			}
 		}
 		return values;
 	}
 
+	setValues(values: Map<string, string | boolean>): void {
+		for (const nameValue of values) {
+			const name = nameValue[0];
+			const value = nameValue[1];
+			const elem = this.element(name, HTMLElement);
+			if (elem === null) {
+				throw new Error(`Invalid form name of "${name}".`);
+			}
+			const classList = elem.classList;
+			if (classList.contains('text') || classList.contains('password')) {
+				elem.querySelector('input')!.value = '' + value;
+			}
+			else if (classList.contains('choice')) {
+				const radioElem = elem.querySelector(`input#${name}-${value}`) as HTMLInputElement | null;
+				if (radioElem === null) {
+					throw new Error(`Invalid value of "${value}" for input "${name}".`);
+				}
+				radioElem.checked = true;
+			}
+			else if (classList.contains('dropdown')) {
+				const selectElem = elem.querySelector('select');
+				if (selectElem!.multiple) {
+					if (typeof value !== 'string') {
+						throw new Error(`Invalid boolean value of "${value}" for input "${name}". It must be a comma-separated string.`);
+					}
+					const values = value.split(',');
+					for (const value of values) {
+						const optionElem = elem.querySelector(`option#${name}-${value.trim()}`) as HTMLOptionElement | null;
+						if (optionElem === null) {
+							throw new Error(`Invalid value of "${value.trim()}" for input "${name}".`);
+						}
+						optionElem.selected = true;
+					}
+				}
+				else {
+					const optionElem = elem.querySelector(`option#${name}-${value}`) as HTMLOptionElement | null;
+					if (optionElem === null) {
+						throw new Error(`Invalid value of "${value}" for input "${name}".`);
+					}
+					optionElem.selected = true;
+				}
+			}
+			else if (classList.contains('toggle')) {
+				elem.querySelector('input')!.checked = typeof value === 'boolean' ? value : value === 'true';
+			}
+		}
+	}
+
 	/** Sets the form to enabled or disabled. */
 	setEnabled(enabled: boolean): void {
 		if (enabled) {
-			for (const entry of this._entries) {
-				const element = this.element(entry, HTMLElement) as HTMLInputElement | HTMLButtonElement;
-				element.disabled = false;
-			}
+			(this.root as HTMLDivElement).style.opacity = '100%';
 		}
 		else {
-			for (const entry of this._entries) {
-				const element = this.element(entry, HTMLElement) as HTMLInputElement | HTMLButtonElement;
-				element.disabled = true;
-			}
+			(this.root as HTMLDivElement).style.opacity = '50%';
 		}
 	}
 
@@ -138,7 +188,7 @@ export class ElmForm extends Component {
 	}
 
 	/** The entries. */
-	private _entries: Set<string> = new Set();
+	private _entryNames: Set<string> = new Set();
 }
 
 ElmForm.html = /* html */`
@@ -147,15 +197,7 @@ ElmForm.html = /* html */`
 	`;
 
 ElmForm.css = /* css */`
-	.ElmForm p.choice {
-		margin-top: 0.25rem;
-		text-align: center;
-	}
-	.ElmForm p.choice button {
-		margin-left: .5rem;
-		margin-right: .5rem;
-	}
-	.ElmForm #submit {
+	.ElmForm .submit {
 		width: 100%;
 	}
 	.ElmForm #message:empty {
