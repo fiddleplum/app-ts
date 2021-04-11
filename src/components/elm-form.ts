@@ -180,6 +180,15 @@ export class ElmForm extends Component {
 		else {
 			(this.root as HTMLDivElement).style.opacity = '50%';
 		}
+		for (const input of this.root.querySelectorAll('input')) {
+			input.disabled = !enabled;
+		}
+		for (const button of this.root.querySelectorAll('button')) {
+			button.disabled = !enabled;
+		}
+		for (const select of this.root.querySelectorAll('select')) {
+			select.disabled = !enabled;
+		}
 	}
 
 	/** Sets the message below the form. */
