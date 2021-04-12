@@ -6,96 +6,13 @@ export class ElmForm extends Component {
 	constructor(params: Component.Params) {
 		super(params);
 
-		let html = '';
-		for (const elem of params.children) {
-			if (elem instanceof HTMLElement) {
-				if (elem.tagName === 'ENTRY') {
-					const type = elem.getAttribute('type');
-					if (type === null) {
-						throw new Error('Type attribute is required in the entry.');
-					}
-					if (type !== 'submit') {
-						const name = elem.getAttribute('name');
-						if (name === null) {
-							throw new Error('Name attribute is required in the entry.');
-						}
-						if (this._entryNames.has(name)) {
-							throw new Error('Only one entry of each name allowed.');
-						}
-						let value = elem.getAttribute('value');
-						if (value === null) {
-							value = '';
-						}
-						const width = elem.getAttribute('width');
-						const widthStyle = width !== null ? ` style="width: ${width}"` : '';
-						html += `<span id="${name}" class="${type} entry">`;
-						if (type === 'text') {
-							html += `<input name="${name}" type="text" value="${value}"${widthStyle}></input>`;
-						}
-						else if (type === 'password') {
-							html += `<input name="${name}" type="password" value="${value}"${widthStyle}></input>`;
-						}
-						else if (type === 'choice') {
-							for (const choiceElement of elem.children) {
-								if (choiceElement.tagName !== 'CHOICE') {
-									throw new Error(`Non-choice element found in choice selection.`);
-								}
-								const choiceValue = choiceElement.getAttribute('value');
-								if (choiceValue === null) {
-									throw new Error(`Value attribute is required in choice element.`);
-								}
-								const checked = choiceValue === value;
-								const label = choiceElement.innerHTML;
-								html += `
-									<input id="${name}-${choiceValue}" type="radio" name="${name}" value="${choiceValue}"${checked ? ' checked' : ''}${widthStyle}></input>
-									<label for="${name}-${choiceValue}">${label}</label>
-									`;
-							}
-						}
-						else if (type === 'dropdown') {
-							const multiple = elem.getAttribute('multiple');
-							html += `<select name="${name}"${multiple !== null ? ' multiple' : ''}>`;
-							for (const choiceElement of elem.children) {
-								if (choiceElement.tagName !== 'CHOICE') {
-									throw new Error(`Non-option element found in option selection.`);
-								}
-								const choiceValue = choiceElement.getAttribute('value');
-								if (choiceValue === null) {
-									throw new Error(`Value attribute is required in choice element.`);
-								}
-								const selected = choiceValue === value;
-								const label = choiceElement.innerHTML;
-								html += `<option id="${name}-${choiceValue}" value="${choiceValue}"${selected ? ' selected' : ''}>${label}</option>`;
-							}
-							html += `</select>`;
-						}
-						else if (type === 'toggle') {
-							const label = elem.innerHTML;
-							html += `
-								<input id="${name}-input" type="checkbox" name="${name}"${value === 'true' ? ' checked' : ''}></input>
-								<label for="${name}-input"${widthStyle}>${label}</label>`;
-						}
-						else {
-							throw new Error(`Unknown entry type "${type}" found.`);
-						}
-						html += `</span>`;
-						this._entryNames.add(name);
-					}
-					else {
-						const action = elem.getAttribute('action');
-						if (action === null) {
-							throw new Error('Action is required in the submit entry.');
-						}
-						html += `<button class="submit" onclick="${action}">${elem.innerHTML}</button>`;
-						html += `<p id="message"></p>`;
-					}
-				}
-				else {
-					html += elem.outerHTML;
-				}
-			}
+		// Insert all of the children.
+		for (const node of params.children) {
+			this.insertNode(this.root, null, node, params.parent ?? this);
 		}
-		this.insertHtml(this.root, null, html, params.parent ?? undefined);
+
+		// Parse the entries.
+		this.parseEntries(params.parent);
 	}
 
 	/** Gets the current input values as a map. Dropdowns with multiple selections are separated by commas. */
@@ -194,6 +111,97 @@ export class ElmForm extends Component {
 	/** Sets the message below the form. */
 	setMessage(message: string): void {
 		this.element('message', HTMLParagraphElement).innerHTML = message;
+	}
+
+	/** Parses all of the entries. */
+	private parseEntries(context: Component | undefined): void {
+		const entries = this.root.querySelectorAll('entry');
+		for (const entry of entries) {
+			let html = '';
+			const type = entry.getAttribute('type');
+			if (type === null) {
+				throw new Error('Type attribute is required in the entry.');
+			}
+			if (type !== 'submit') {
+				const name = entry.getAttribute('name');
+				if (name === null) {
+					throw new Error('Name attribute is required in the entry.');
+				}
+				if (this._entryNames.has(name)) {
+					throw new Error('Only one entry of each name allowed.');
+				}
+				let value = entry.getAttribute('value');
+				if (value === null) {
+					value = '';
+				}
+				const width = entry.getAttribute('width');
+				const widthStyle = width !== null ? ` style="width: ${width}"` : '';
+				html += `<span id="${name}" class="${type} entry">`;
+				if (type === 'text') {
+					html += `<input name="${name}" type="text" value="${value}"${widthStyle}></input>`;
+				}
+				else if (type === 'password') {
+					html += `<input name="${name}" type="password" value="${value}"${widthStyle}></input>`;
+				}
+				else if (type === 'choice') {
+					for (const choiceElement of entry.children) {
+						if (choiceElement.tagName !== 'CHOICE') {
+							throw new Error(`Non-choice element found in choice selection.`);
+						}
+						const choiceValue = choiceElement.getAttribute('value');
+						if (choiceValue === null) {
+							throw new Error(`Value attribute is required in choice element.`);
+						}
+						const checked = choiceValue === value;
+						const label = choiceElement.innerHTML;
+						html += `
+							<input id="${name}-${choiceValue}" type="radio" name="${name}" value="${choiceValue}"${checked ? ' checked' : ''}${widthStyle}></input>
+							<label for="${name}-${choiceValue}">${label}</label>
+							`;
+					}
+				}
+				else if (type === 'dropdown') {
+					const multiple = entry.getAttribute('multiple');
+					html += `<select name="${name}"${multiple !== null ? ' multiple' : ''}>`;
+					for (const choiceElement of entry.children) {
+						if (choiceElement.tagName !== 'CHOICE') {
+							throw new Error(`Non-option element found in option selection.`);
+						}
+						const choiceValue = choiceElement.getAttribute('value');
+						if (choiceValue === null) {
+							throw new Error(`Value attribute is required in choice element.`);
+						}
+						const selected = choiceValue === value;
+						const label = choiceElement.innerHTML;
+						html += `<option id="${name}-${choiceValue}" value="${choiceValue}"${selected ? ' selected' : ''}>${label}</option>`;
+					}
+					html += `</select>`;
+				}
+				else if (type === 'toggle') {
+					const label = entry.innerHTML;
+					html += `
+						<input id="${name}-input" type="checkbox" name="${name}"${value === 'true' ? ' checked' : ''}></input>
+						<label for="${name}-input"${widthStyle}>${label}</label>`;
+				}
+				else {
+					throw new Error(`Unknown entry type "${type}" found.`);
+				}
+				html += `</span>`;
+				this._entryNames.add(name);
+			}
+			else {
+				const action = entry.getAttribute('action');
+				if (action === null) {
+					throw new Error('Action is required in the submit entry.');
+				}
+				html += `<button class="submit" onclick="${action}">${entry.innerHTML}</button>`;
+				html += `<p id="message"></p>`;
+			}
+			// Add the html.
+			this.insertHtml(entry.parentElement!, entry, html, context);
+			// Delete the entry element.
+			this.removeElement(entry);
+		}
 	}
 
 	/** The entries. */

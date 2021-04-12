@@ -204,12 +204,17 @@ export class Component {
 		const templateElem = document.createElement('template');
 		templateElem.innerHTML = html;
 		for (const child of templateElem.content.childNodes) {
-			const newNode = child.cloneNode(true);
-			parent.insertBefore(newNode, before);
-			if (newNode instanceof Element) {
-				this.setComponentsAndEventHandlers(newNode, context);
-				this.setIds(newNode);
-			}
+			this.insertNode(parent, before, child, context);
+		}
+	}
+
+	/** Inserts a node at the end of the parent or before a child node. */
+	protected insertNode(parent: Element, before: Node | null, node: Node, context: Component = this): void {
+		const newNode = node.cloneNode(true);
+		parent.insertBefore(newNode, before);
+		if (newNode instanceof Element) {
+			this.setComponentsAndEventHandlers(newNode, context);
+			this.setIds(newNode);
 		}
 	}
 
@@ -507,7 +512,7 @@ export namespace Component {
 	/** The params of an element that will become a component. */
 	export class Params {
 		/** The parent component. */
-		public parent: Component | null = null;
+		public parent: Component | undefined;
 
 		/** The id of the component, if it has one. The root's id is set to it. */
 		public id = '';
