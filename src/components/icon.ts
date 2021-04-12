@@ -37,12 +37,19 @@ export class Icon extends Component {
 		if (this._src === '') {
 			return;
 		}
-		fetch(this._src).then(response => response.text()).then((text) => {
+		fetch(this._src).then((response) => {
+			if (200 <= response.status && response.status <= 299) {
+				return response.text();
+			}
+			else {
+				throw new Error(`The source ${this._src} returned ${response.status}: ${response.statusText}`);
+			}
+		}).then((text) => {
 			// Parse the text into an svg element.
 			const template = document.createElement('template');
 			template.innerHTML = text.trim();
 			if (template.content.children.length !== 1 || !(template.content.firstElementChild instanceof SVGElement)) {
-				throw new Error('The source ' + this._src + ' is not a valid .svg file.');
+				throw new Error(`The source ${this._src} is not a valid .svg file.`);
 			}
 			const svg = template.content.firstElementChild;
 			// Remove the old children.
