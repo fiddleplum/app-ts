@@ -5,8 +5,9 @@ export class ElmCheckbox extends Component {
 		super(params);
 
 		// Make sure it has an id.
-		if (this.id === '') {
-			throw new Error(`All inputs must have ids.`);
+		const name = params.attributes.get('name');
+		if (name === undefined || name === '') {
+			throw new Error('All inputs must have a name attribute.');
 		}
 
 		const checked = params.attributes.get('checked');
@@ -22,9 +23,9 @@ export class ElmCheckbox extends Component {
 		const label = this.root.children[1];
 
 		// Setup the id-for connection.
-		input.id = `${this.id}-input`;
-		input.setAttribute('name', `${this.id}`);
-		label.setAttribute('for', `${this.id}-input`);
+		input.id = `${name}-input`;
+		input.setAttribute('name', `${name}`);
+		label.setAttribute('for', `${name}-input`);
 
 		// Add the children to the button.
 		for (const child of params.children) {
