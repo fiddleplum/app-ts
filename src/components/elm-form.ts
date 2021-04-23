@@ -12,7 +12,7 @@ export class ElmForm extends Component {
 		}
 
 		// Parse the entries.
-		this.parseEntries(params.parent);
+		this.parseEntries(this.root, params.parent);
 	}
 
 	/** Gets the current input values as a map. Dropdowns with multiple selections are separated by commas. */
@@ -41,6 +41,7 @@ export class ElmForm extends Component {
 		return values;
 	}
 
+	/** Sets the values for the form. */
 	setValues(values: Map<string, string | boolean>): void {
 		for (const nameValue of values) {
 			const name = nameValue[0];
@@ -113,9 +114,15 @@ export class ElmForm extends Component {
 		this.element('message', HTMLParagraphElement).innerHTML = message;
 	}
 
+	/** Inserts entries as html to be parsed as part of the form. */
+	insertEntries(parent: Element, before: Node | null, html: string, context: Component = this): void {
+		this.insertHtml(parent, before, html, context);
+		this.parseEntries(parent, context);
+	}
+
 	/** Parses all of the entries. */
-	private parseEntries(context: Component | undefined): void {
-		const entries = this.root.querySelectorAll('entry');
+	private parseEntries(elem: Element, context: Component | undefined): void {
+		const entries = elem.querySelectorAll('entry');
 		for (const entry of entries) {
 			let html = '';
 			const type = entry.getAttribute('type');
@@ -128,7 +135,7 @@ export class ElmForm extends Component {
 					throw new Error('Name attribute is required in the entry.');
 				}
 				if (this._entryNames.has(name)) {
-					throw new Error('Only one entry of each name allowed.');
+					throw new Error(`Only one entry of each name allowed. The duplicate name is ${name}`);
 				}
 				let value = entry.getAttribute('value');
 				if (value === null) {
