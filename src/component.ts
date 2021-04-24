@@ -363,18 +363,33 @@ export class Component {
 		for (const attribute of element.attributes) {
 			const attributeName = attribute.name.toLowerCase();
 			if (attributeName.startsWith('on')) {
-				if (attribute.value in context) {
-					const value = (context as Record<string, unknown>)[attribute.value];
+				let attributeValue: string = attribute.value;
+				let attributeParam: string | undefined;
+				// Get the string parameter, if it exists.
+				if (attributeValue.includes('|')) {
+					const index = attributeValue.indexOf('|');
+					attributeParam = attributeValue.substring(index + 1);
+					attributeValue = attributeValue.substring(0, index);
+				}
+				if (attributeValue in context) {
+					const value = (context as Record<string, unknown>)[attributeValue];
 					if (value instanceof Function) {
-						eventHandlers.set(attributeName.substring(2), value.bind(context));
+						let functionCall;
+						if (attributeParam !== undefined) {
+							functionCall = value.bind(context, attributeParam);
+						}
+						else {
+							functionCall = value.bind(context);
+						}
+						eventHandlers.set(attributeName.substring(2), functionCall);
 						attributesToRemove.push(attribute.name);
 					}
 					else {
-						throw new Error(`In ${context}, the value "${attribute.value}" of the event handler ${attributeName} of component element ${element.id} is not a function of ${context.constructor.name}.`);
+						throw new Error(`In ${context}, the value "${attributeValue}" of the event handler ${attributeName} of component element ${element.id} is not a function of ${context.constructor.name}.`);
 					}
 				}
 				else {
-					throw new Error(`In ${context}, the value "${attribute.value}" of the event handler "${attributeName}" of component element ${element.id} is not in ${context.constructor.name}.`);
+					throw new Error(`In ${context}, the value "${attributeValue}" of the event handler "${attributeName}" of component element ${element.id} is not in ${context.constructor.name}.`);
 				}
 			}
 		}
