@@ -174,12 +174,12 @@ export class Component {
 
 	/** Sets the inner html for an element. Cleans up tabs and newlines in the HTML.
 	 * Cleans up old id, handlers, and components and adds new id, handlers, and components. */
-	protected setHtml(element: Element, html: string): void {
+	protected setHtml(element: Element, html: string, context: Component = this): void {
 		for (const child of element.children) {
 			this.removeElement(child);
 		}
 		element.innerHTML = '';
-		this.insertHtml(element, null, html);
+		this.insertHtml(element, null, html, context);
 	}
 
 	/** Removes an element. */
