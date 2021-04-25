@@ -57,9 +57,6 @@ export class Component {
 		// Set the elements that are child components and the event handlers.
 		this.setComponentsAndEventHandlers(this._root, this);
 
-		// Set the id-to-element mapping of the root and its children.
-		this.setIds(this._root);
-
 		// Add the classes to the root element.
 		for (const ancestorEntries of registryEntry.ancestors) {
 			this._root.classList.add(ancestorEntries.ComponentType.name);
@@ -138,19 +135,14 @@ export class Component {
 		return this._root;
 	}
 
-	/** Returns true if this has an element with the id. */
-	protected hasElement(id: string): boolean {
-		return this._idsToElements.has(id);
-	}
-
-	/** Gets the element with the id. Throws a ReferenceError if not found. */
-	protected element<Type extends Element>(id: string, Type: { new (...args: any[]): Type }): Type {
-		const element = this._idsToElements.get(id);
+	/** Gets an element by its class. */
+	protected query<Type extends Element>(query: string, Type: { new (...args: any[]): Type }): Type {
+		const element = this._root.querySelector(query);
 		if (element === undefined) {
-			throw new ReferenceError(`The element with id "${id}" could not be found.`);
+			throw new ReferenceError(`The element with query "${query}" could not be found.`);
 		}
 		if (!(element instanceof Type)) {
-			throw new ReferenceError(`The element with id "${id}" is not of type ${Type.name}`);
+			throw new ReferenceError(`The element with query "${query}" is not of type ${Type.name}`);
 		}
 		return element;
 	}
@@ -184,9 +176,6 @@ export class Component {
 
 	/** Removes an element. */
 	protected removeElement(element: Element): void {
-		// Unset any ids associated with the element and its children.
-		this.unsetIds(element);
-
 		// Unset all of the components that are in the node. */
 		for (const component of this._components) {
 			if (element.contains(component._root)) {
@@ -214,7 +203,6 @@ export class Component {
 		parent.insertBefore(newNode, before);
 		if (newNode instanceof Element) {
 			this.setComponentsAndEventHandlers(newNode, context);
-			this.setIds(newNode);
 		}
 	}
 
@@ -265,38 +253,6 @@ export class Component {
 		const eventHandler = this._eventHandlers.get(eventName);
 		if (eventHandler !== undefined) {
 			eventHandler(this, ...args);
-		}
-	}
-
-	/** Sets the ids for the element and its children, excluding components. */
-	private setIds(element: Element): void {
-		// Don't process child components.
-		if (element.classList.contains('Component')) {
-			return;
-		}
-		// Set the id to element mapping. Ignore the root, since its id is assigned by the parent component.
-		if (element.id !== undefined && element.id !== '' && element !== this._root) {
-			if (this._idsToElements.has(element.id)) {
-				throw new Error(`In ${this}, the element with id ${element.id} is already used.`);
-			}
-			this._idsToElements.set(element.id, element);
-		}
-		// Check the children of this element.
-		for (const child of element.children) {
-			this.setIds(child);
-		}
-	}
-
-	/** Unsets the ids for the node and its children, excluding components.. */
-	private unsetIds(element: Element): void {
-		if (element.classList.contains('Component')) {
-			return; // Don't process child components.
-		}
-		if (element.id !== undefined && element.id !== '') {
-			this._idsToElements.delete(element.id);
-		}
-		for (const child of element.children) {
-			this.unsetIds(child);
 		}
 	}
 
@@ -474,9 +430,6 @@ export class Component {
 
 	/** The set of child components. */
 	private _components: Set<Component> = new Set();
-
-	/** The mapping of ids to elements. */
-	private _idsToElements: Map<string, Element> = new Map();
 
 	/** The mapping of ids to child components. */
 	private _idsToComponents: Map<string, Component> = new Map();

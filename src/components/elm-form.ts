@@ -1,4 +1,5 @@
 import { Component } from '../component';
+import { RandomString } from '../random_string';
 
 /** An easy-to-use form. */
 export class ElmForm extends Component {
@@ -18,24 +19,24 @@ export class ElmForm extends Component {
 	/** Gets the current input values as a map. Dropdowns with multiple selections are separated by commas. */
 	getValues(): Map<string, string | boolean> {
 		const values: Map<string, string | boolean> = new Map();
-		for (const entry of this._entryNames) {
-			const spanElem = this.element(entry, HTMLElement);
+		for (const [name, id] of this._entryNamesToIds) {
+			const spanElem = this.query(`#${id}`, HTMLDivElement);
 			if (spanElem.classList.contains('text') || spanElem.classList.contains('password')) {
-				values.set(entry, spanElem.querySelector('input')!.value);
+				values.set(name, spanElem.querySelector('input')!.value);
 			}
 			else if (spanElem.classList.contains('choice')) {
 				const choiceElems = spanElem.querySelectorAll('input');
 				for (const choiceElem of choiceElems) {
 					if (choiceElem.checked) {
-						values.set(entry, choiceElem.value);
+						values.set(name, choiceElem.value);
 					}
 				}
 			}
 			else if (spanElem.classList.contains('dropdown')) {
-				values.set(entry, spanElem.querySelector('select')!.value);
+				values.set(name, spanElem.querySelector('select')!.value);
 			}
 			else if (spanElem.classList.contains('toggle')) {
-				values.set(entry, spanElem.querySelector('input')!.checked);
+				values.set(name, spanElem.querySelector('input')!.checked);
 			}
 		}
 		return values;
@@ -46,16 +47,17 @@ export class ElmForm extends Component {
 		for (const nameValue of values) {
 			const name = nameValue[0];
 			const value = nameValue[1];
-			const elem = this.element(name, HTMLElement);
-			if (elem === null) {
+			const id = this._entryNamesToIds.get(name);
+			if (id === undefined) {
 				throw new Error(`Invalid form name of "${name}".`);
 			}
+			const elem = this.query(`#${id}`, HTMLDivElement);
 			const classList = elem.classList;
 			if (classList.contains('text') || classList.contains('password')) {
 				elem.querySelector('input')!.value = '' + value;
 			}
 			else if (classList.contains('choice')) {
-				const radioElem = elem.querySelector(`input#${name}-${value}`) as HTMLInputElement | null;
+				const radioElem = elem.querySelector(`input#${id}-${value}`) as HTMLInputElement | null;
 				if (radioElem === null) {
 					throw new Error(`Invalid value of "${value}" for input "${name}".`);
 				}
@@ -69,7 +71,7 @@ export class ElmForm extends Component {
 					}
 					const values = value.split(',');
 					for (const value of values) {
-						const optionElem = elem.querySelector(`option#${name}-${value.trim()}`) as HTMLOptionElement | null;
+						const optionElem = elem.querySelector(`option#${id}-${value.trim()}`) as HTMLOptionElement | null;
 						if (optionElem === null) {
 							throw new Error(`Invalid value of "${value.trim()}" for input "${name}".`);
 						}
@@ -77,7 +79,7 @@ export class ElmForm extends Component {
 					}
 				}
 				else {
-					const optionElem = elem.querySelector(`option#${name}-${value}`) as HTMLOptionElement | null;
+					const optionElem = elem.querySelector(`option#${id}-${value}`) as HTMLOptionElement | null;
 					if (optionElem === null) {
 						throw new Error(`Invalid value of "${value}" for input "${name}".`);
 					}
@@ -111,7 +113,7 @@ export class ElmForm extends Component {
 
 	/** Sets the message below the form. */
 	setMessage(message: string): void {
-		this.element('message', HTMLParagraphElement).innerHTML = message;
+		this.query('.message', Element).innerHTML = message;
 	}
 
 	/** Inserts entries as html to be parsed as part of the form. */
@@ -134,16 +136,21 @@ export class ElmForm extends Component {
 				if (name === null) {
 					throw new Error('Name attribute is required in the entry.');
 				}
-				if (this._entryNames.has(name)) {
+				if (this._entryNamesToIds.has(name)) {
 					throw new Error(`Only one entry of each name allowed. The duplicate name is ${name}`);
 				}
 				let value = entry.getAttribute('value');
 				if (value === null) {
 					value = '';
 				}
+				// Generate a random id and set the name-to-id mapping.
+				const id = RandomString.generate(16);
+				this._entryNamesToIds.set(name, id);
+				// Get the widths.
 				const width = entry.getAttribute('width');
 				const widthStyle = width !== null ? ` style="width: ${width}"` : '';
-				html += `<span id="${name}" class="${type} entry">`;
+				// Create the html depending on the type.
+				html += `<span id="${id}" class="${type} entry">`;
 				if (type === 'text') {
 					html += `<input name="${name}" type="text" value="${value}"${widthStyle}></input>`;
 				}
@@ -162,8 +169,8 @@ export class ElmForm extends Component {
 						const checked = choiceValue === value;
 						const label = choiceElement.innerHTML;
 						html += `
-							<input id="${name}-${choiceValue}" type="radio" name="${name}" value="${choiceValue}"${checked ? ' checked' : ''}${widthStyle}></input>
-							<label for="${name}-${choiceValue}">${label}</label>
+							<input id="${id}-${choiceValue}" type="radio" name="${name}" value="${choiceValue}"${checked ? ' checked' : ''}${widthStyle}></input>
+							<label for="${id}-${choiceValue}">${label}</label>
 							`;
 					}
 				}
@@ -180,21 +187,20 @@ export class ElmForm extends Component {
 						}
 						const selected = choiceValue === value;
 						const label = choiceElement.innerHTML;
-						html += `<option id="${name}-${choiceValue}" value="${choiceValue}"${selected ? ' selected' : ''}>${label}</option>`;
+						html += `<option id="${id}-${choiceValue}" value="${choiceValue}"${selected ? ' selected' : ''}>${label}</option>`;
 					}
 					html += `</select>`;
 				}
 				else if (type === 'toggle') {
 					const label = entry.innerHTML;
 					html += `
-						<input id="${name}-input" type="checkbox" name="${name}"${value === 'true' ? ' checked' : ''}></input>
-						<label for="${name}-input"${widthStyle}>${label}</label>`;
+						<input id="${id}-input" type="checkbox" name="${name}"${value === 'true' ? ' checked' : ''}></input>
+						<label for="${id}-input"${widthStyle}>${label}</label>`;
 				}
 				else {
 					throw new Error(`Unknown entry type "${type}" found.`);
 				}
 				html += `</span>`;
-				this._entryNames.add(name);
 			}
 			else {
 				const action = entry.getAttribute('action');
@@ -202,7 +208,7 @@ export class ElmForm extends Component {
 					throw new Error('Action is required in the submit entry.');
 				}
 				html += `<button class="submit" onclick="${action}">${entry.innerHTML}</button>`;
-				html += `<p id="message"></p>`;
+				html += `<p class="message"></p>`;
 			}
 			// Add the html.
 			this.insertHtml(entry.parentElement!, entry, html, context);
@@ -212,7 +218,7 @@ export class ElmForm extends Component {
 	}
 
 	/** The entries. */
-	private _entryNames: Set<string> = new Set();
+	private _entryNamesToIds: Map<string, string> = new Map();
 }
 
 ElmForm.html = /* html */`
@@ -224,10 +230,10 @@ ElmForm.css = /* css */`
 	.ElmForm .submit {
 		width: 100%;
 	}
-	.ElmForm #message:empty {
+	.ElmForm .message:empty {
 		opacity: 0;
 	}
-	.ElmForm #message {
+	.ElmForm .message {
 		opacity: 1;
 		transition: opacity .125s;
 	}

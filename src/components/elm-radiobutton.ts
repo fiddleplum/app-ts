@@ -1,30 +1,34 @@
 import { Component } from '../component';
+import { RandomString } from '../random_string';
 
 export class ElmRadioButton extends Component {
 	constructor(params: Component.Params) {
 		super(params);
 
-		// Make sure it has an id.
-		if (this.id === '') {
-			throw new Error(`All inputs must have ids.`);
+		// Get the name attribute.
+		const name = params.attributes.get('name');
+		if (name === undefined || name === '') {
+			throw new Error('All inputs must have a name attribute.');
 		}
 
-		// Get the label width.
-		const labelWidth = params.attributes.get('name');
-		if (labelWidth === undefined) {
-			throw new Error('LabelWidth attribute is required in ElmForm.');
+		// Get the checked attribute.
+		const checked = params.attributes.get('checked');
+		if (checked !== undefined) {
+			this.root.children[0].setAttribute('checked', '');
 		}
 
 		// Register the events.
 		this.registerEvent('toggle', params);
 
 		// Get the parts.
-		const input = this.root.children[0];
-		const label = this.root.children[1];
+		const input = this.root.children[0] as HTMLInputElement;
+		const label = this.root.children[1] as HTMLLabelElement;
 
 		// Setup the id-for connection.
-		input.id = `${this.id}-input`;
-		label.setAttribute('for', `${this.id}-input`);
+		const id = RandomString.generate(16);
+		input.id = id;
+		input.name = name;
+		label.htmlFor = id;
 
 		// Add the children to the button.
 		for (const child of params.children) {

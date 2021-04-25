@@ -10,7 +10,7 @@ export class PushButton extends AbstractButton {
 			// Remove the pressed class.
 			this.root.classList.remove('pressed');
 			// Call the user release callback.
-			this.triggerEvent	('release');
+			this.triggerEvent('release');
 		});
 		// Call the user press callback.
 		this.triggerEvent('press');
