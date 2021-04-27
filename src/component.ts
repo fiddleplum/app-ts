@@ -49,11 +49,6 @@ export class Component {
 			this._root = root;
 		}
 
-		// Set the root id.
-		if (params.id !== '') {
-			this._root.id = params.id;
-		}
-
 		// Set the elements that are child components and the event handlers.
 		this.setComponentsAndEventHandlers(this._root, this);
 
@@ -116,9 +111,8 @@ export class Component {
 	/** Returns a string form of the component. */
 	toString(): string {
 		const componentName = this.constructor.name;
-		const id = this._root.id;
-		if (id !== '') {
-			return componentName + ' id:' + id;
+		if (this._id !== '') {
+			return componentName + ' id:' + this._id;
 		}
 		else {
 			return componentName;
