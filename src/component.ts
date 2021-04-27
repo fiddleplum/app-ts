@@ -162,7 +162,7 @@ export class Component {
 	 * Cleans up old id, handlers, and components and adds new id, handlers, and components. */
 	protected setHtml(element: Element, html: string, context: Component = this): void {
 		for (const child of element.children) {
-			this.removeElement(child);
+			this.removeNode(child);
 		}
 		element.innerHTML = '';
 		this.insertHtml(element, null, html, context);
