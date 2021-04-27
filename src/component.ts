@@ -173,7 +173,7 @@ export class Component {
 		// Unset all of the components that are in the node. */
 		for (const component of this._components) {
 			if (element.contains(component._root)) {
-				this.deleteComponent(component);
+				this.removeComponent(component);
 			}
 		}
 
@@ -216,12 +216,12 @@ export class Component {
 		return newComponent;
 	}
 
-	/** Deletes the component. Does nothing if it isn't found. */
-	protected deleteComponent(component: Component): void {
+	/** Removes the component. Does nothing if it isn't found. */
+	protected removeComponent(component: Component): void {
 		if (!this._components.has(component)) {
 			return;
 		}
-		// Delete the component from the lists.
+		// Remove the component from the lists.
 		if (component._root.id !== '') {
 			this._idsToComponents.delete(component._root.id);
 		}
