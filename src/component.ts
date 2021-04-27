@@ -132,7 +132,7 @@ export class Component {
 	/** Gets an element by its class. */
 	protected query<Type extends Element>(query: string, Type: { new (...args: any[]): Type }): Type {
 		const element = this._root.querySelector(query);
-		if (element === undefined) {
+		if (element === null) {
 			throw new ReferenceError(`The element with query "${query}" could not be found.`);
 		}
 		if (!(element instanceof Type)) {
