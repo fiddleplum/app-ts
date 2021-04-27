@@ -224,8 +224,8 @@ export class Component {
 			return;
 		}
 		// Remove the component from the lists.
-		if (component._root.id !== '') {
-			this._idsToComponents.delete(component._root.id);
+		if (component._id !== '') {
+			this._idsToComponents.delete(component._id);
 		}
 		this._components.delete(component);
 
