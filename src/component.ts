@@ -168,19 +168,6 @@ export class Component {
 		this.insertHtml(element, null, html, context);
 	}
 
-	/** Removes an element. */
-	protected removeElement(element: Element): void {
-		// Unset all of the components that are in the node. */
-		for (const component of this._components) {
-			if (element.contains(component._root)) {
-				this.removeComponent(component);
-			}
-		}
-
-		// Remove the element from its parent.
-		element.parentNode?.removeChild(element);
-	}
-
 	/** Inserts html at the end of the parent or before a child node. */
 	protected insertHtml(parent: Element, before: Node | null, html: string, context: Component = this): void {
 		html = html.replace(/>[\t\n]+</g, '><');
@@ -197,6 +184,21 @@ export class Component {
 		parent.insertBefore(newNode, before);
 		if (newNode instanceof Element) {
 			this.setComponentsAndEventHandlers(newNode, context);
+		}
+	}
+
+	/** Removes a node. */
+	protected removeNode(node: Node): void {
+		// Unset all of the components that are in the node. */
+		for (const component of this._components) {
+			if (node.contains(component._root)) {
+				this.removeComponent(component);
+			}
+		}
+
+		// Remove the node from its parent.
+		if (node.parentNode !== null) {
+			node.parentNode.removeChild(node);
 		}
 	}
 
