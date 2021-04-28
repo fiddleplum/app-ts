@@ -58,6 +58,11 @@ export class Component {
 			this._root.classList.add(ancestorEntries.ComponentType.name);
 		}
 
+		// Add any classes given in the params.
+		for (const className of params.classes) {
+			this._root.classList.add(className);
+		}
+
 		// Set the style elements for the component and its ancestors.
 		let lastStyleElem = null;
 		for (let i = 0; i < registryEntry.ancestors.length; i++) {
@@ -266,6 +271,11 @@ export class Component {
 
 			// Set the id.
 			params.id = element.id;
+
+			// Add any classes that are from the element itself.
+			for (const className of element.classList) {
+				params.classes.push(className);
+			}
 
 			// Extract the event handlers from the attributes.
 			const eventHandlers = this.extractEventHandlers(element, context);
@@ -498,8 +508,11 @@ export namespace Component {
 		/** The parent component. */
 		public parent: Component | undefined;
 
-		/** The id of the component, if it has one. The root's id is set to it. */
+		/** The id of the component, if it has one. */
 		public id = '';
+
+		/** The classes of the component, if it has any. */
+		this.classes: string[] = [];
 
 		/** The attributes passed as if it were <Component attrib=''...>. All of the keys are lower case. */
 		public attributes: Map<string, string> = new Map();
