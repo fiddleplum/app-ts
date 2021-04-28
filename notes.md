@@ -5,6 +5,24 @@
 
 # Design Decisions
 
+## Ids vs Classes, or How to Reference Elements
+
+Ids can only be used once per page. It should always be assumed that any component, even App, might be used more than once. Therefore, ids should never be used in components, except when necessitated by accessibility attributes. In those cases, those ids must be made to be unique (perhaps via suffixing with a random string).
+
+There is no need to use a custom attribute like "ref", since classes work just as well. All CSS and JavaScript should therefore just reference classes.
+
+* Ids should only ever be used in places where it is required:
+  * input-label/for pairs.
+  * element/aria-* pairs.
+* When an id is found, it should append a random 16 digits to it, and then search for all labels or aria-* attributes to find references to it, and append the 16 digits to them as well.
+* Everything else should be classes.
+
+### Components and Ids
+
+I'm encountering an issue when there are multiple components of the same type. In JavaScript, I can refer to them by their id via the `component()` function. However, how do I refer to them in the CSS? I normally refer to a component via its class name, but if there are multiple components, I can't.
+
+I believe I need to still use only classes in the CSS, and so I need to be able to pass additional classes into the component. Every component's constructor should copy over the classes from the custom element to the root.
+
 ## Event Handlers and Parameters
 
 I'm running into an issue with event handlers on components. When I have many buttons, I may want them all to call the same function, but with different parameters. Those parameters might be strings, numbers, or booleans. The question is, how do I allow it?

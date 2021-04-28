@@ -1,4 +1,5 @@
 import { App } from './app';
+import { RandomString } from './random_string';
 
 /**
  * A base component from which other components can extend.
@@ -299,6 +300,9 @@ export class Component {
 				element.addEventListener(entry[0], entry[1]);
 			}
 
+			// Make the id of the element unique.
+			this.makeIdsUnique(element);
+
 			// Go through the child elements.
 			for (const child of element.children) {
 				this.setComponentsAndEventHandlers(child, context);
@@ -350,6 +354,23 @@ export class Component {
 		}
 		// Return the processed event handlers.
 		return eventHandlers;
+	}
+
+	/** Makes any id of the element unique, along with any connecting pairs. */
+	private makeIdsUnique(element: Element): void {
+		// If it has an id, make it unique.
+		if (element.id !== '') {
+			const id = element.id;
+			const uniqueSuffix = `-${RandomString.generate(16)}`;
+			element.id += uniqueSuffix;
+			const attributes = ['for', 'aria-labelledby', 'aria-describedby'];
+			for (const attribute of attributes) {
+				const elems = this._root.querySelectorAll(`[${attribute}=${id}]`);
+				for (const elem of elems) {
+					elem.setAttribute(attribute, id + uniqueSuffix);
+				}
+			}
+		}
 	}
 
 	/** Registers a component. */
