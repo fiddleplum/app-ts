@@ -180,10 +180,9 @@ export class Component {
 
 	/** Inserts a node at the end of the parent or before a child node. */
 	protected insertNode(parent: Element, before: Node | null, node: Node, context: Component = this): void {
-		const newNode = node.cloneNode(true);
-		parent.insertBefore(newNode, before);
-		if (newNode instanceof Element) {
-			this.setComponentsAndEventHandlers(newNode, context);
+		parent.insertBefore(node, before);
+		if (node instanceof Element) {
+			this.setComponentsAndEventHandlers(node, context);
 		}
 	}
 
