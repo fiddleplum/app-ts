@@ -179,8 +179,8 @@ export class Component {
 		html = html.replace(/>[\t\n]+</g, '><');
 		const templateElem = document.createElement('template');
 		templateElem.innerHTML = html;
-		for (const child of templateElem.content.childNodes) {
-			this.insertNode(parent, before, child, context);
+		while (templateElem.content.childNodes.length > 0) {
+			this.insertNode(parent, before, templateElem.content.childNodes[0], context);
 		}
 	}
 
@@ -375,7 +375,7 @@ export class Component {
 			element.id += uniqueSuffix;
 			const attributes = ['for', 'aria-labelledby', 'aria-describedby'];
 			for (const attribute of attributes) {
-				const elems = this._root.querySelectorAll(`[${attribute}=${id}]`);
+				const elems = this._root.querySelectorAll(`[${attribute}="${id}"]`);
 				for (const elem of elems) {
 					elem.setAttribute(attribute, id + uniqueSuffix);
 				}
@@ -512,7 +512,7 @@ export namespace Component {
 		public id = '';
 
 		/** The classes of the component, if it has any. */
-		this.classes: string[] = [];
+		public classes: string[] = [];
 
 		/** The attributes passed as if it were <Component attrib=''...>. All of the keys are lower case. */
 		public attributes: Map<string, string> = new Map();

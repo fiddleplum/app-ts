@@ -46,7 +46,7 @@ export abstract class SimpleApp extends App {
 		const pageElement = this.getPageElement();
 		await ShowHide.hide(pageElement);
 		if (this.page !== undefined) {
-			this.deleteComponent(this.page);
+			this.removeComponent(this.page);
 		}
 
 		// Create and show new page.

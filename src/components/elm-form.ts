@@ -20,7 +20,7 @@ export class ElmForm extends Component {
 	getValues(): Map<string, string | boolean> {
 		const values: Map<string, string | boolean> = new Map();
 		for (const [name, id] of this._entryNamesToIds) {
-			const spanElem = this.query(`#${id}`, HTMLDivElement);
+			const spanElem = this.query(`.entry-${id}`, HTMLSpanElement);
 			if (spanElem.classList.contains('text') || spanElem.classList.contains('password')) {
 				values.set(name, spanElem.querySelector('input')!.value);
 			}
@@ -51,13 +51,13 @@ export class ElmForm extends Component {
 			if (id === undefined) {
 				throw new Error(`Invalid form name of "${name}".`);
 			}
-			const elem = this.query(`#${id}`, HTMLDivElement);
+			const elem = this.query(`.entry-${id}`, HTMLDivElement);
 			const classList = elem.classList;
 			if (classList.contains('text') || classList.contains('password')) {
 				elem.querySelector('input')!.value = '' + value;
 			}
 			else if (classList.contains('choice')) {
-				const radioElem = elem.querySelector(`input#${id}-${value}`) as HTMLInputElement | null;
+				const radioElem = elem.querySelector(`input.${id}-${value}`) as HTMLInputElement | null;
 				if (radioElem === null) {
 					throw new Error(`Invalid value of "${value}" for input "${name}".`);
 				}
@@ -71,7 +71,7 @@ export class ElmForm extends Component {
 					}
 					const values = value.split(',');
 					for (const value of values) {
-						const optionElem = elem.querySelector(`option#${id}-${value.trim()}`) as HTMLOptionElement | null;
+						const optionElem = elem.querySelector(`option.${id}-${value.trim()}`) as HTMLOptionElement | null;
 						if (optionElem === null) {
 							throw new Error(`Invalid value of "${value.trim()}" for input "${name}".`);
 						}
@@ -79,7 +79,7 @@ export class ElmForm extends Component {
 					}
 				}
 				else {
-					const optionElem = elem.querySelector(`option#${id}-${value}`) as HTMLOptionElement | null;
+					const optionElem = elem.querySelector(`option.${id}-${value}`) as HTMLOptionElement | null;
 					if (optionElem === null) {
 						throw new Error(`Invalid value of "${value}" for input "${name}".`);
 					}
@@ -150,7 +150,7 @@ export class ElmForm extends Component {
 				const width = entry.getAttribute('width');
 				const widthStyle = width !== null ? ` style="width: ${width}"` : '';
 				// Create the html depending on the type.
-				html += `<span id="${id}" class="${type} entry">`;
+				html += `<span class="entry-${id} ${type} entry">`;
 				if (type === 'text') {
 					html += `<input name="${name}" type="text" value="${value}"${widthStyle}></input>`;
 				}
@@ -187,7 +187,7 @@ export class ElmForm extends Component {
 						}
 						const selected = choiceValue === value;
 						const label = choiceElement.innerHTML;
-						html += `<option id="${id}-${choiceValue}" value="${choiceValue}"${selected ? ' selected' : ''}>${label}</option>`;
+						html += `<option class="${id}-${choiceValue}" value="${choiceValue}"${selected ? ' selected' : ''}>${label}</option>`;
 					}
 					html += `</select>`;
 				}
@@ -213,7 +213,7 @@ export class ElmForm extends Component {
 			// Add the html.
 			this.insertHtml(entry.parentElement!, entry, html, context);
 			// Delete the entry element.
-			this.removeElement(entry);
+			this.removeNode(entry);
 		}
 	}
 
