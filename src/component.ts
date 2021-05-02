@@ -135,7 +135,7 @@ export class Component {
 		return this._root;
 	}
 
-	/** Gets an element by its class. */
+	/** Gets an element by a query. */
 	protected query<Type extends Element>(query: string, Type: { new (...args: any[]): Type }): Type {
 		const element = this._root.querySelector(query);
 		if (element === null) {
@@ -145,6 +145,17 @@ export class Component {
 			throw new ReferenceError(`The element with query "${query}" is not of type ${Type.name}`);
 		}
 		return element;
+	}
+
+	/** Gets elements by a query. */
+	protected queryAll<Type extends Element>(query: string, Type: { new (...args: any[]): Type }): NodeListOf<Type> {
+		const elements = this._root.querySelectorAll(query);
+		for (const element of elements) {
+			if (!(element instanceof Type)) {
+				throw new ReferenceError(`An element with queryAll "${query}" is not of type ${Type.name}`);
+			}
+		}
+		return elements as NodeListOf<Type>;
 	}
 
 	/** Returns true if this has an component with the id. */
