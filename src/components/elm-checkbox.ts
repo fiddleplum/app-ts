@@ -13,7 +13,7 @@ export class ElmCheckbox extends Component {
 
 		// Get the checked attribute.
 		const checked = params.attributes.get('checked');
-		if (checked !== undefined) {
+		if (checked !== undefined && checked !== 'false') {
 			this.root.children[0].setAttribute('checked', '');
 		}
 
