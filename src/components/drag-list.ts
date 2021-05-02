@@ -4,6 +4,15 @@ export class DragList extends Component {
 	constructor(params: Component.Params) {
 		super(params);
 
+		// Get the callback called just before the drag starts.
+		this._beforeGrabCallback = params.eventHandlers.get('beforegrab');
+
+		// Get the callback called just after a drag.
+		this._afterDragCallback = params.eventHandlers.get('afterdrag');
+
+		// Get the callback called just after the drag ends.
+		this._afterReleaseCallback = params.eventHandlers.get('afterrelease');
+
 		// Get the reordered callback.
 		this._reinsertCallback = params.eventHandlers.get('reinsert');
 
@@ -13,7 +22,7 @@ export class DragList extends Component {
 				throw new Error('All children of DragLists must be HTMLElements.');
 			}
 			const itemDiv = document.createElement('div');
-			itemDiv.style.overflow = 'auto';
+			itemDiv.style.overflow = 'hidden';
 			itemDiv.appendChild(child);
 			this.insertNode(this.root, null, itemDiv, params.parent);
 		}
@@ -37,12 +46,17 @@ export class DragList extends Component {
 		while (this._draggedItem.parentNode !== this.root) {
 			this._draggedItem = this._draggedItem.parentNode as HTMLElement;
 		}
+		// Call the callback before anything is calculated or done.
+		if (this._beforeGrabCallback) {
+			this._beforeGrabCallback(this, this._draggedItem);
+		}
 		// Record the mouse/touch position of the cursor.
 		this._refY = this._getY(event);
 		// Make the dragged item have relative positioning.
 		const parentBounds = this._draggedItem.parentElement!.getBoundingClientRect();
 		const bounds = this._draggedItem.getBoundingClientRect();
-		this._elemRefY = bounds.top - parentBounds.top;
+		this._parentElemRefY = parentBounds.top;
+		this._elemRefY = bounds.top - this._parentElemRefY;
 		this._draggedItem.style.position = 'absolute';
 		this._draggedItem.style.top = `${this._elemRefY}px`;
 		this._draggedItem.style.width = `${bounds.width}px`;
@@ -61,10 +75,16 @@ export class DragList extends Component {
 		// Get the position of the cursor.
 		let y = this._getY(event);
 		y -= this._refY;
+		const parentBounds = this._draggedItem!.parentElement!.getBoundingClientRect();
+		this._elemRefY -= parentBounds.top - this._parentElemRefY;
+		this._parentElemRefY = parentBounds.top;
 		// Set the dragged item's position.
 		this._draggedItem!.style.top = `${this._elemRefY + y}px`;
 		// Adjust the padding of the other items.
 		this._adjustPaddings(true);
+		if (this._afterDragCallback !== undefined) {
+			this._afterDragCallback(this, this._draggedItem!);
+		}
 	}
 
 	private _onRelease(_event: MouseEvent | TouchEvent): void {
@@ -72,19 +92,23 @@ export class DragList extends Component {
 		window.removeEventListener('mousemove', this._onDrag);
 		window.removeEventListener('mouseup', this._onRelease);
 		// See if the order changed at all by checking if the next siblings are the same.
-		const changed = this._draggedItem!.nextSibling !== (this._itemWithIncreasedPadding ?? null);
-		const draggedChild = this._draggedItem!.firstElementChild as HTMLElement;
-		const beforeChild = (this._itemWithIncreasedPadding?.firstElementChild ?? undefined) as HTMLElement | undefined;
+		const beforeItem = this._itemWithIncreasedPadding ?? null;
+		const changed = this._draggedItem!.nextSibling !== beforeItem;
 		// Place the item back.
+		const draggedItem = this._draggedItem!;
 		this._draggedItem!.style.position = '';
 		this._draggedItem!.style.zIndex = '';
-		this.root.insertBefore(this._draggedItem!, this._itemWithIncreasedPadding ?? null);
+		this.root.insertBefore(this._draggedItem!, beforeItem);
 		this._draggedItem = undefined;
 		// Revert the paddings of the items to their original.
 		this._adjustPaddings(false);
+		// Call the after released callback.
+		if (this._afterReleaseCallback !== undefined) {
+			this._afterReleaseCallback(this, draggedItem, beforeItem);
+		}
 		// Call the reordered callback if needed.
 		if (this._reinsertCallback !== undefined && changed) {
-			this._reinsertCallback(this, draggedChild, beforeChild);
+			this._reinsertCallback(this, draggedItem, beforeItem);
 		}
 	}
 
@@ -112,8 +136,9 @@ export class DragList extends Component {
 				if (child === this._draggedItem) {
 					continue;
 				}
+				const childItem = child.firstElementChild!;
 				// Get the bounds of the actual list item.
-				const bounds = child.firstElementChild!.getBoundingClientRect();
+				const bounds = childItem.getBoundingClientRect();
 				// Compare the middle-y values and choose the before item based on where the cursor is.
 				const middleOfItem = (bounds.top + bounds.bottom) / 2;
 				if (middleOfDraggedItem <= middleOfItem) {
@@ -143,8 +168,17 @@ export class DragList extends Component {
 		return Number.parseFloat(window.getComputedStyle(element).getPropertyValue(property));
 	}
 
+	/** The callback called just before the drag starts. */
+	private _beforeGrabCallback: ((component: DragList, elem: HTMLElement) => void) | undefined = undefined;
+
+	/** The callback called just after a drag occurs. */
+	private _afterDragCallback: ((component: DragList, elem: HTMLElement) => void) | undefined = undefined;
+
+	/** The callback called just after the drag ends. */
+	private _afterReleaseCallback: ((component: DragList, elem: HTMLElement, before: HTMLElement | null) => void) | undefined = undefined;
+
 	/** The callback called when an item is reinserted in a different location. */
-	private _reinsertCallback: ((component: DragList, elem: HTMLElement, before: HTMLElement | undefined) => void) | undefined;
+	private _reinsertCallback: ((component: DragList, elem: HTMLElement, before: HTMLElement | null) => void) | undefined;
 
 	/** The item currently being dragged. */
 	private _draggedItem: HTMLElement | undefined;
@@ -154,6 +188,9 @@ export class DragList extends Component {
 
 	/** The item with increased padding that the dragged item, if let go, will be place before. */
 	private _itemWithIncreasedPadding: HTMLElement | undefined;
+
+	/** The parent of the item's original y value. */
+	private _parentElemRefY: number = 0;
 
 	/** The dragged item's original y value. */
 	private _elemRefY: number = 0;
@@ -169,9 +206,6 @@ DragList.html = /* html */`<div>
 DragList.css = /** css */`
 	.DragList {
 		position: relative;
-	}
-	.DragList > * {
-		t2ransition: top .25s;
 	}
 	`;
 
