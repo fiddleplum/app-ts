@@ -2,6 +2,7 @@ export * from './app';
 export * from './component';
 export * from './cookies';
 export * from './form-helper';
+export * from './random_string';
 export * from './router';
 export * from './show-hide';
 export * from './simple-app';
