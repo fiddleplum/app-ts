@@ -37,11 +37,6 @@ export abstract class SimpleApp extends App {
 			return;
 		}
 
-		// If it's the same page, do nothing.
-		if (this.page !== undefined && this.page.constructor === Page) {
-			return;
-		}
-
 		// Hide and delete old page.
 		const pageElement = this.getPageElement();
 		await ShowHide.hide(pageElement);
