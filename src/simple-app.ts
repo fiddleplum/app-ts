@@ -45,7 +45,7 @@ export abstract class SimpleApp extends App {
 		}
 
 		// Create and show new page.
-		this.page = this.insertComponent(Page, pageElement, null, new Component.Params());
+		this.page = this.insertComponent(Page, pageElement, undefined, new Component.Params());
 		await ShowHide.show(pageElement);
 
 		// Call the new page callback.

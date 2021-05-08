@@ -67,7 +67,7 @@ export class Component {
 		}
 
 		// Set the style elements for the component and its ancestors.
-		let lastStyleElem = null;
+		let lastStyleElem = undefined;
 		for (let i = 0; i < registryEntry.ancestors.length; i++) {
 			const ancestorEntry = registryEntry.ancestors[i];
 
@@ -77,7 +77,7 @@ export class Component {
 					ancestorEntry.styleElem = document.createElement('style');
 					ancestorEntry.styleElem.id = ancestorEntry.ComponentType.name;
 					ancestorEntry.styleElem.innerHTML = ancestorEntry.css;
-					document.head.insertBefore(ancestorEntry.styleElem, lastStyleElem);
+					document.head.insertBefore(ancestorEntry.styleElem, lastStyleElem ?? null);
 				}
 				ancestorEntry.styleElemUseCount += 1;
 				lastStyleElem = ancestorEntry.styleElem;
@@ -107,11 +107,11 @@ export class Component {
 		for (let i = 0; i < this._registryEntry.ancestors.length; i++) {
 			// Decrement the use count of the ancestor's style element and remove it if the use count is zero.
 			const ancestorEntry = this._registryEntry.ancestors[i];
-			if (ancestorEntry.styleElem !== null) {
+			if (ancestorEntry.styleElem !== undefined) {
 				ancestorEntry.styleElemUseCount -= 1;
 				if (ancestorEntry.styleElemUseCount === 0) {
 					document.head.removeChild(ancestorEntry.styleElem);
-					ancestorEntry.styleElem = null;
+					ancestorEntry.styleElem = undefined;
 				}
 			}
 		}
@@ -185,27 +185,36 @@ export class Component {
 
 	/** Sets the inner html for an element. Cleans up tabs and newlines in the HTML.
 	 * Cleans up old id, handlers, and components and adds new id, handlers, and components. */
-	protected setHtml(element: Element, html: string, context: Component = this): void {
+	protected setHtml(html: string, element: Element, context: Component = this): void {
 		for (const child of element.children) {
 			this.removeNode(child);
 		}
 		element.innerHTML = '';
-		this.insertHtml(element, null, html, context);
+		this.insertHtml(html, element, undefined, context);
 	}
 
-	/** Inserts html at the end of the parent or before a child node. */
-	protected insertHtml(parent: Element, before: Node | null, html: string, context: Component = this): void {
+	/** Inserts html at the end of the parent or before a child node. Returns the first node of the inserted HTML. */
+	protected insertHtml(html: string, parent: Element, before: Node | undefined, context: Component = this): Node[] {
+		// Turn the HTML into a template.
 		html = html.replace(/>[\t\n]+</g, '><');
 		const templateElem = document.createElement('template');
 		templateElem.innerHTML = html;
-		while (templateElem.content.childNodes.length > 0) {
-			this.insertNode(parent, before, templateElem.content.childNodes[0], context);
+		// Record the root nodes of the new HTML.
+		const rootNodes = [];
+		for (const node of templateElem.content.childNodes) {
+			rootNodes.push(node);
 		}
+		// Insert the nodes.
+		while (templateElem.content.childNodes.length > 0) {
+			this.insertNode(templateElem.content.childNodes[0], parent, before, context);
+		}
+		// Return the root nodes of the HTML.
+		return rootNodes;
 	}
 
 	/** Inserts a node at the end of the parent or before a child node. */
-	protected insertNode(parent: Element, before: Node | null, node: Node, context: Component = this): void {
-		parent.insertBefore(node, before);
+	protected insertNode(node: Node, parent: Element, before: Node | undefined, context: Component = this): void {
+		parent.insertBefore(node, before ?? null);
 		if (node instanceof Element) {
 			this.setComponentsAndEventHandlers(node, context);
 		}
@@ -228,11 +237,11 @@ export class Component {
 
 	/** Sets a new component of type *ComponentType* as a child of *parentNode* right before
 	 * the child *beforeChild* using the *params*. */
-	protected insertComponent<T extends Component>(ComponentType: new (params: Component.Params) => T, parentNode: Node, beforeChild: Node | null, params: Component.Params): T {
+	protected insertComponent<T extends Component>(ComponentType: new (params: Component.Params) => T, parentNode: Node, beforeChild: Node | undefined, params: Component.Params): T {
 		// Create the component.
 		const newComponent = new ComponentType(params);
 		// Insert the new component root in the right spot of this component.
-		parentNode.insertBefore(newComponent._root, beforeChild);
+		parentNode.insertBefore(newComponent._root, beforeChild ?? null);
 		// Add it to the list of components.
 		this._components.add(newComponent);
 		// Set the id, if there is one.
@@ -562,7 +571,7 @@ class RegistryEntry {
 	public ancestors: RegistryEntry[] = [];
 
 	/** The style element. */
-	public styleElem: HTMLStyleElement | null = null;
+	public styleElem: HTMLStyleElement | undefined = undefined;
 
 	/** The number of components using this style. Includes ComponentType and all its descendants. */
 	public styleElemUseCount = 0;

@@ -9,7 +9,7 @@ export class ElmForm extends Component {
 
 		// Insert all of the children.
 		for (const node of params.children) {
-			this.insertNode(this.root, null, node, params.parent ?? this);
+			this.insertNode(node, this.root, undefined, params.parent ?? this);
 		}
 
 		// Parse the entries.
@@ -117,8 +117,8 @@ export class ElmForm extends Component {
 	}
 
 	/** Inserts entries as html to be parsed as part of the form. */
-	insertEntries(parent: Element, before: Node | null, html: string, context: Component = this): void {
-		this.insertHtml(parent, before, html, context);
+	insertEntries(parent: Element, before: Node | undefined, html: string, context: Component = this): void {
+		this.insertHtml(html, parent, before, context);
 		this.parseEntries(parent, context);
 	}
 
@@ -211,7 +211,7 @@ export class ElmForm extends Component {
 				html += `<p class="message"></p>`;
 			}
 			// Add the html.
-			this.insertHtml(entry.parentElement!, entry, html, context);
+			this.insertHtml(html, entry.parentElement!, entry, context);
 			// Delete the entry element.
 			this.removeNode(entry);
 		}

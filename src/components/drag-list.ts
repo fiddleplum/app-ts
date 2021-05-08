@@ -13,18 +13,12 @@ export class DragList extends Component {
 		// Get the callback called just after the drag ends.
 		this._afterReleaseCallback = params.eventHandlers.get('afterrelease');
 
-		// Get the reordered callback.
-		this._reinsertCallback = params.eventHandlers.get('reinsert');
-
 		// Add the children to the list.
 		for (const child of params.children) {
 			if (!(child instanceof HTMLElement)) {
 				throw new Error('All children of DragLists must be HTMLElements.');
 			}
-			const itemDiv = document.createElement('div');
-			itemDiv.style.overflow = 'hidden';
-			itemDiv.appendChild(child);
-			this.insertNode(this.root, null, itemDiv, params.parent);
+			this.insertNode(child, this.root, undefined, this.parent);
 		}
 
 		// Bind the functions for the future calls.
