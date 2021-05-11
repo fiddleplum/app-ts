@@ -34,35 +34,50 @@ export class WS {
 
 					// Get the id of the response.
 					const id = response.id;
-					if (typeof id !== 'number') {
-						throw new Error('Response.id must be a number.');
-					}
-
-					// Get the function to be resolved using the response id.
-					const promiseFunctions = this.activeSends.get(id);
-					if (promiseFunctions === undefined) {
-						throw new Error('No active send waiting for response.');
-					}
-
-					// Remove the id from the actively sending message list and release the id.
-					this.activeSends.delete(id);
-					this.uniqueIds.release(id);
-
-					// If the response was not a success, call reject the promise function.
-					const success = response.success;
-					if (typeof success !== 'boolean') {
-						throw new Error('Response.success must be a boolean.');
-					}
-					if (success === false) {
-						const error = response.error;
-						if (typeof error !== 'string') {
-							throw new Error('Response.error must be a string when response.success is false.');
+					if (id !== undefined) {
+						if (typeof id !== 'number') {
+							throw new Error('Response.id must be a number.');
 						}
-						promiseFunctions.reject(new Error(error));
+
+						// Get the function to be resolved using the response id.
+						const promiseFunctions = this.activeSends.get(id);
+						if (promiseFunctions === undefined) {
+							throw new Error('No active send waiting for response.');
+						}
+
+						// Remove the id from the actively sending message list and release the id.
+						this.activeSends.delete(id);
+						this.uniqueIds.release(id);
+
+						// If the response was not a success, call reject the promise function.
+						const success = response.success;
+						if (typeof success !== 'boolean') {
+							throw new Error('Response.success must be a boolean.');
+						}
+						if (success === false) {
+							const error = response.error;
+							if (typeof error !== 'string') {
+								throw new Error('Response.error must be a string when response.success is false.');
+							}
+							promiseFunctions.reject(new Error(error));
+						}
+						else {
+							// Call the resolve function.
+							promiseFunctions.resolve(response.data);
+						}
 					}
+					// It doesn't have an id, so it must be a handler.
 					else {
-						// Call the resolve function.
-						promiseFunctions.resolve(response.data);
+						const module = response.module;
+						if (typeof module !== 'string') {
+							throw new Error('Response.module must be a string.');
+						}
+
+						const handler = this.handlers.get(module);
+						if (handler === undefined) {
+							return;
+						}
+						handler(response.data);
 					}
 				}
 				catch (error) {
@@ -118,6 +133,16 @@ export class WS {
 		});
 	}
 
+	/** Register a handler for receiving messages. */
+	registerHandler(module: string, handler: (response: JSONType | undefined) => void): void {
+		this.handlers.set(module, handler);
+	}
+
+	/** Unregister a handler for receiving messages. */
+	unregisterHandler(module: string): void {
+		this.handlers.delete(module);
+	}
+
 	/** The WebSocket connection. */
 	private webSocket: WebSocket | undefined;
 
@@ -126,6 +151,9 @@ export class WS {
 
 	/** The list of active sent messages awaiting a received message. */
 	private activeSends: Map<number, PromiseFunctions> = new Map();
+
+	/** The handlers for received messages. */
+	private handlers: Map<string, (response: JSONType | undefined) => void> = new Map();
 }
 
 export class PromiseFunctions {
