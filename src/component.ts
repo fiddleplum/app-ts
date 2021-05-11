@@ -144,10 +144,10 @@ export class Component {
 	}
 
 	/** Gets an element by a query. */
-	protected query<Type extends Element>(query: string, Type: { new (...args: any[]): Type }): Type {
+	protected query<Type extends Element>(query: string, Type: { new (...args: any[]): Type }): Type | undefined {
 		const element = this._root.querySelector(query);
 		if (element === null) {
-			throw new ReferenceError(`The element with query "${query}" could not be found.`);
+			return undefined;
 		}
 		if (!(element instanceof Type)) {
 			throw new ReferenceError(`The element with query "${query}" is not of type ${Type.name}`);

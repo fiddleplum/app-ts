@@ -20,7 +20,7 @@ export class ElmForm extends Component {
 	getValues(): Map<string, string | boolean> {
 		const values: Map<string, string | boolean> = new Map();
 		for (const [name, id] of this._entryNamesToIds) {
-			const spanElem = this.query(`.entry-${id}`, HTMLSpanElement);
+			const spanElem = this.query(`.entry-${id}`, HTMLSpanElement)!;
 			if (spanElem.classList.contains('text') || spanElem.classList.contains('password')) {
 				values.set(name, spanElem.querySelector('input')!.value);
 			}
@@ -51,7 +51,7 @@ export class ElmForm extends Component {
 			if (id === undefined) {
 				throw new Error(`Invalid form name of "${name}".`);
 			}
-			const elem = this.query(`.entry-${id}`, HTMLDivElement);
+			const elem = this.query(`.entry-${id}`, HTMLDivElement)!;
 			const classList = elem.classList;
 			if (classList.contains('text') || classList.contains('password')) {
 				elem.querySelector('input')!.value = '' + value;
@@ -113,7 +113,7 @@ export class ElmForm extends Component {
 
 	/** Sets the message below the form. */
 	setMessage(message: string): void {
-		this.query('.message', Element).innerHTML = message;
+		this.query('.message', Element)!.innerHTML = message;
 	}
 
 	/** Inserts entries as html to be parsed as part of the form. */
