@@ -11,6 +11,12 @@ export class ElmRadioButton extends Component {
 			throw new Error('All inputs must have a name attribute.');
 		}
 
+		// Get the name attribute.
+		const value = params.attributes.get('value');
+		if (value === undefined || value === '') {
+			throw new Error('All inputs must have a value attribute.');
+		}
+
 		// Get the checked attribute.
 		const checked = params.attributes.get('checked');
 		if (checked !== undefined) {
@@ -28,11 +34,12 @@ export class ElmRadioButton extends Component {
 		const id = RandomString.generate(16);
 		input.id = id;
 		input.name = name;
+		input.value = value;
 		label.htmlFor = id;
 
 		// Add the children to the button.
 		for (const child of params.children) {
-			label.appendChild(child);
+			this.insertNode(child, label, undefined, params.parent);
 		}
 	}
 
