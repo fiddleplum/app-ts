@@ -9,7 +9,7 @@ export class FormHelper {
 			}
 			else if (inputElem.type === 'radio') {
 				if (inputElem.checked) {
-					values.set(inputElem.name, true);
+					values.set(inputElem.name, inputElem.value);
 				}
 			}
 			else {
