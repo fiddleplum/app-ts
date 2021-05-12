@@ -114,6 +114,7 @@ export class DragList extends Component {
 		const draggedItem = this._draggedItem!;
 		this._draggedItem!.style.position = '';
 		this._draggedItem!.style.zIndex = '';
+		this._draggedItem!.style.width = '';
 		this.root.insertBefore(this._draggedItem!, beforeItem ?? null);
 		this._draggedItem = undefined;
 		// Revert the paddings of the items to their original.
