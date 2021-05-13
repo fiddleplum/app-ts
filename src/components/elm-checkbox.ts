@@ -32,7 +32,7 @@ export class ElmCheckbox extends Component {
 
 		// Add the children to the button.
 		for (const child of params.children) {
-			label.appendChild(child);
+			this.insertNode(child, label, undefined, params.parent);
 		}
 	}
 
