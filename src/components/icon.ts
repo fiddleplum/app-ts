@@ -65,6 +65,11 @@ export class Icon extends Component {
 			else {
 				svgElement.removeAttribute('viewBox');
 			}
+			// Copy over the fill if it is transparent.
+			const fillAttribute = svg.getAttribute('fill');
+			if (fillAttribute === 'none') {
+				svgElement.style.fill = fillAttribute;
+			}
 			// Copy over the children.
 			while (svg.firstChild !== null) {
 				svgElement.appendChild(svg.firstChild);

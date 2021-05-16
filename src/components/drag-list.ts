@@ -4,14 +4,9 @@ export class DragList extends Component {
 	constructor(params: Component.Params) {
 		super(params);
 
-		// Get the callback called just before the drag starts.
-		this._beforeGrabCallback = params.eventHandlers.get('beforegrab');
-
-		// Get the callback called just after a drag.
-		this._afterDragCallback = params.eventHandlers.get('afterdrag');
-
-		// Get the callback called just after the drag ends.
-		this._afterReleaseCallback = params.eventHandlers.get('afterrelease');
+		this.registerEvent('beforegrab', params);
+		this.registerEvent('afterdrag', params);
+		this.registerEvent('afterrelease', params);
 
 		// Add the children to the list.
 		for (const child of params.children) {
@@ -64,9 +59,7 @@ export class DragList extends Component {
 			this._draggedItem = this._draggedItem.parentNode as HTMLElement;
 		}
 		// Call the callback before anything is calculated or done.
-		if (this._beforeGrabCallback) {
-			this._beforeGrabCallback(this, this._draggedItem, event);
-		}
+		this.triggerEvent('beforegrab', this._draggedItem, event);
 		// Record the mouse/touch position of the cursor.
 		this._refY = this._getY(event);
 		// Make the dragged item have relative positioning.
@@ -98,9 +91,8 @@ export class DragList extends Component {
 		this._draggedItem!.style.top = `${this._elemRefY + diffY}px`;
 		// Adjust the padding of the other items.
 		this._adjustMargins(true);
-		if (this._afterDragCallback !== undefined) {
-			this._afterDragCallback(this, this._draggedItem!, event, this._itemWithIncreasedPadding);
-		}
+		// Trigger the after drag event.
+		this.triggerEvent('afterdrag', this._draggedItem!, event, this._itemWithIncreasedPadding);
 	}
 
 	private _onRelease(_event: MouseEvent | TouchEvent): void {
@@ -119,10 +111,8 @@ export class DragList extends Component {
 		this._draggedItem = undefined;
 		// Revert the paddings of the items to their original.
 		this._adjustMargins(false);
-		// Call the after released callback.
-		if (this._afterReleaseCallback !== undefined) {
-			this._afterReleaseCallback(this, draggedItem, beforeItem, changed);
-		}
+		// Trigger the after released event.
+		this.triggerEvent('afterrelease', draggedItem, beforeItem, changed);
 	}
 
 	/** Returns the y value of the event. */
@@ -174,15 +164,6 @@ export class DragList extends Component {
 			}
 		}
 	}
-
-	/** The callback called just before the drag starts. */
-	private _beforeGrabCallback: ((component: DragList, elem: HTMLElement, event: MouseEvent | TouchEvent) => void) | undefined = undefined;
-
-	/** The callback called just after a drag occurs. */
-	private _afterDragCallback: ((component: DragList, elem: HTMLElement, event: MouseEvent | TouchEvent, before: HTMLElement | undefined) => void) | undefined = undefined;
-
-	/** The callback called just after the drag ends. */
-	private _afterReleaseCallback: ((component: DragList, elem: HTMLElement, before: HTMLElement | undefined, changed: boolean) => void) | undefined = undefined;
 
 	/** The item currently being dragged. */
 	private _draggedItem: HTMLElement | undefined;

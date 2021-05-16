@@ -11,6 +11,7 @@ export * from './ws';
 // Components
 export * from './components/drag-list';
 export * from './components/icon';
+export * from './components/multi-select';
 export * from './components/push-button';
 export * from './components/shot-button';
 export * from './components/toggle-button';

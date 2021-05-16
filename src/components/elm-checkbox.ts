@@ -1,9 +1,12 @@
 import { Component } from '../component';
-import { RandomString } from '../random_string';
 
 export class ElmCheckbox extends Component {
 	constructor(params: Component.Params) {
 		super(params);
+
+		// Get the parts.
+		const label = this.root as HTMLLabelElement;
+		const input = this.query('input', HTMLInputElement)!;
 
 		// Get the name attribute.
 		const name = params.attributes.get('name');
@@ -14,21 +17,14 @@ export class ElmCheckbox extends Component {
 		// Get the checked attribute.
 		const checked = params.attributes.get('checked');
 		if (checked !== undefined && checked !== 'false') {
-			this.root.children[0].setAttribute('checked', '');
+			input.setAttribute('checked', '');
 		}
 
 		// Register the events.
 		this.registerEvent('toggle', params);
 
-		// Get the parts.
-		const input = this.root.children[0] as HTMLInputElement;
-		const label = this.root.children[1] as HTMLLabelElement;
-
-		// Setup the id-for connection.
-		const id = RandomString.generate(16);
-		input.id = id;
+		// Set the name.
 		input.name = name;
-		label.htmlFor = id;
 
 		// Add the children to the button.
 		for (const child of params.children) {
@@ -44,10 +40,9 @@ export class ElmCheckbox extends Component {
 }
 
 ElmCheckbox.html = /* html */`
-	<span>
+	<label class="no-select" tabindex=0 onclick="_toggle">
 		<input type="checkbox" />
-		<label class="no-select" tabindex=0 onclick="_toggle"></label>
-	</span>
+	</label>
 `;
 
 ElmCheckbox.register();

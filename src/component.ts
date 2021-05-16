@@ -193,10 +193,10 @@ export class Component {
 		this.insertHtml(html, element, undefined, context);
 	}
 
-	/** Inserts html at the end of the parent or before a child node. Returns the first node of the inserted HTML. */
+	/** Inserts html at the end of the parent or before a child node. Returns the nodes of the inserted HTML. */
 	protected insertHtml(html: string, parent: Element, before: Node | undefined, context: Component = this): Node[] {
 		// Turn the HTML into a template.
-		html = html.replace(/>[\t\n]+</g, '><');
+		html = html.replace(/>[\t\n]+</g, '><').trim();
 		const templateElem = document.createElement('template');
 		templateElem.innerHTML = html;
 		// Record the root nodes of the new HTML.
@@ -205,8 +205,8 @@ export class Component {
 			rootNodes.push(node);
 		}
 		// Insert the nodes.
-		while (templateElem.content.childNodes.length > 0) {
-			this.insertNode(templateElem.content.childNodes[0], parent, before, context);
+		for (let i = 0; i < rootNodes.length; i++) {
+			this.insertNode(rootNodes[i], parent, before, context);
 		}
 		// Return the root nodes of the HTML.
 		return rootNodes;
@@ -281,7 +281,7 @@ export class Component {
 	protected triggerEvent(eventName: string, ...args: any[]): void {
 		const eventHandler = this._eventHandlers.get(eventName);
 		if (eventHandler !== undefined) {
-			eventHandler(this, ...args);
+			eventHandler(this, eventName, ...args);
 		}
 	}
 
@@ -402,11 +402,19 @@ export class Component {
 			const uniqueSuffix = `-${RandomString.generate(16)}`;
 			element.id += uniqueSuffix;
 			const attributes = ['for', 'aria-labelledby', 'aria-describedby'];
+			let found = false;
 			for (const attribute of attributes) {
+				if (id === 'user-admin') {
+					console.log(`[${attribute}="${id}"]`);
+				}
 				const elems = this._root.querySelectorAll(`[${attribute}="${id}"]`);
 				for (const elem of elems) {
 					elem.setAttribute(attribute, id + uniqueSuffix);
+					found = true;
 				}
+			}
+			if (!found) {
+				throw new Error(`Element with id "${id}" has no paired element. Use a class instead.`);
 			}
 		}
 	}
