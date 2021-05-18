@@ -25,6 +25,7 @@ export class DragList extends Component {
 		const grabElements = this.root.querySelectorAll('.grab');
 		for (const grabElement of grabElements) {
 			grabElement.addEventListener('mousedown', this._onGrab);
+			grabElement.addEventListener('touchstart', this._onGrab);
 		}
 	}
 
@@ -38,6 +39,7 @@ export class DragList extends Component {
 					const grabElement = node.querySelector('.grab');
 					if (grabElement !== null) {
 						grabElement.addEventListener('mousedown', this._onGrab);
+						grabElement.addEventListener('touchstart', this._onGrab);
 					}
 				}
 			}
@@ -77,7 +79,10 @@ export class DragList extends Component {
 		this._adjustMargins(false);
 		// Enable the drag callbacks.
 		window.addEventListener('mousemove', this._onDrag);
+		window.addEventListener('touchmove', this._onDrag);
 		window.addEventListener('mouseup', this._onRelease);
+		window.addEventListener('touchend', this._onRelease);
+		event.preventDefault();
 	}
 
 	/** Drags the list item from its original position. */
@@ -93,12 +98,15 @@ export class DragList extends Component {
 		this._adjustMargins(true);
 		// Trigger the after drag event.
 		this.triggerEvent('afterdrag', this._draggedItem!, event, this._itemWithIncreasedPadding);
+		event.preventDefault();
 	}
 
-	private _onRelease(_event: MouseEvent | TouchEvent): void {
+	private _onRelease(event: MouseEvent | TouchEvent): void {
 		// Clean up the event listeners.
 		window.removeEventListener('mousemove', this._onDrag);
+		window.removeEventListener('touchmove', this._onDrag);
 		window.removeEventListener('mouseup', this._onRelease);
+		window.removeEventListener('touchend', this._onRelease);
 		// See if the order changed at all by checking if the next siblings are the same.
 		const beforeItem = this._itemWithIncreasedPadding;
 		const changed = (this._draggedItem!.nextSibling ?? undefined) !== beforeItem;
@@ -113,6 +121,7 @@ export class DragList extends Component {
 		this._adjustMargins(false);
 		// Trigger the after released event.
 		this.triggerEvent('afterrelease', draggedItem, beforeItem, changed);
+		event.preventDefault();
 	}
 
 	/** Returns the y value of the event. */
@@ -191,7 +200,7 @@ DragList.html = /* html */`<div>
 DragList.css = /** css */`
 	.DragList {
 		position: relative;
-		overflow: auto;
+		overflow: visible;
 	}
 	`;
 
