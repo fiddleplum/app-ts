@@ -19,7 +19,7 @@ export class ElmForm extends Component {
 	getValues(): Map<string, string | boolean> {
 		const values: Map<string, string | boolean> = new Map();
 		for (const [name, elem] of this._namesToEntryElems) {
-			if (elem.classList.contains('text') || elem.classList.contains('password')) {
+			if (elem.classList.contains('text') || elem.classList.contains('password') || elem.classList.contains('hidden')) {
 				values.set(name, elem.querySelector('input')!.value);
 			}
 			else if (elem.classList.contains('choice')) {
@@ -50,7 +50,7 @@ export class ElmForm extends Component {
 				throw new Error(`Form entry "${name}" not found.`);
 			}
 			const classList = elem.classList;
-			if (classList.contains('text') || classList.contains('password')) {
+			if (classList.contains('text') || classList.contains('password') || classList.contains('hidden')) {
 				elem.querySelector('input')!.value = '' + value;
 			}
 			else if (classList.contains('choice')) {
@@ -194,7 +194,6 @@ export class ElmForm extends Component {
 				const width = entry.getAttribute('width');
 				const widthStyle = width !== null ? ` style="width: ${width}"` : '';
 				// Create the html depending on the type.
-				// html += `<span class="entry-${id} ${type} entry">`;
 				if (type === 'text') {
 					html = `
 						<div class="entry ${type}">
@@ -208,6 +207,12 @@ export class ElmForm extends Component {
 							<label for="${name}">${entry.innerHTML}</label>
 							<input name="${name}" id="${name}" type="password" value="${value}"${widthStyle}></input>
 						</div>`;
+				}
+				else if (type === 'hidden') {
+					html = `
+						<span class="entry ${type}">
+							<input name="${name}" type="hidden" value="${value}"></input>
+						</span>`;
 				}
 				else if (type === 'choice') {
 					html = `<div class="entry ${type}">`;
