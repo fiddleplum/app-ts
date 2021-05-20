@@ -98,7 +98,6 @@ export class DragList extends Component {
 		this._adjustMargins(true);
 		// Trigger the after drag event.
 		this.triggerEvent('afterdrag', this._draggedItem!, event, this._itemWithIncreasedPadding);
-		event.preventDefault();
 	}
 
 	private _onRelease(event: MouseEvent | TouchEvent): void {
