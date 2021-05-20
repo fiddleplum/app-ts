@@ -198,14 +198,14 @@ export class ElmForm extends Component {
 					html = `
 						<div class="entry ${type}">
 							<label for="${name}">${entry.innerHTML}</label>
-							<input name="${name}" id="${name}" type="text" value="${value}"${widthStyle}></input>
+							<input class="input" name="${name}" id="${name}" type="text" value="${value}"${widthStyle}></input>
 						</div>`;
 				}
 				else if (type === 'password') {
 					html = `
 						<div class="entry ${type}">
 							<label for="${name}">${entry.innerHTML}</label>
-							<input name="${name}" id="${name}" type="password" value="${value}"${widthStyle}></input>
+							<input class="input" name="${name}" id="${name}" type="password" value="${value}"${widthStyle}></input>
 						</div>`;
 				}
 				else if (type === 'hidden') {
@@ -235,7 +235,7 @@ export class ElmForm extends Component {
 				}
 				else if (type === 'dropdown') {
 					const multiple = entry.getAttribute('multiple');
-					html += `<select name="${name}"${multiple !== null ? ' multiple' : ''}>`;
+					html += `<select class="input" name="${name}"${multiple !== null ? ' multiple' : ''}>`;
 					for (const choiceElement of entry.children) {
 						if (choiceElement.tagName !== 'CHOICE') {
 							throw new Error(`Non-option element found in option selection.`);
@@ -269,7 +269,7 @@ export class ElmForm extends Component {
 				html = `
 					<div class="message"></div>
 					<div class="submit">
-						<button onclick="${action}">${entry.innerHTML}</button>
+						<button class="button" onclick="${action}">${entry.innerHTML}</button>
 					</div>`;
 
 			}
