@@ -8,7 +8,6 @@ export class DragList extends Component {
 		this._draggedItemsElem = this.query('.dragged-items', HTMLElement)!;
 		this._itemsElem = this.query('.items', HTMLElement)!;
 
-		this.registerEvent('beforegrab', params);
 		this.registerEvent('aftergrab', params);
 		this.registerEvent('afterdrag', params);
 		this.registerEvent('afterrelease', params);
@@ -65,8 +64,6 @@ export class DragList extends Component {
 		while (this._draggedElem.parentNode !== this._itemsElem) {
 			this._draggedElem = this._draggedElem.parentNode as HTMLElement;
 		}
-		// Call the callback before anything is calculated or done.
-		this.triggerEvent('beforegrab', this._draggedElem, event);
 		// Get the document y coordinate of the root for use as the origin.
 		const rootBounds = this.root.getBoundingClientRect();
 		this._rootElemRefY = rootBounds.top + window.scrollY;
