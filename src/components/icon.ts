@@ -78,8 +78,15 @@ export class Icon extends Component {
 	}
 }
 
-Icon.html = `
+Icon.html = /* html */`
 	<svg></svg>
 	`;
+
+Icon.css = /* css */`
+	.Icon {
+		/* Make sure it never becomes the target of a mouse event. This can happen if a button surrounds
+		   it and the user clicks part of the actual SVG lines. */
+		pointer-events: none;
+	}`;
 
 Icon.register();
