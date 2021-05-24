@@ -90,13 +90,19 @@ export class WS {
 			// When there is an error in the websocket...
 			this.webSocket.onerror = (event: ErrorEvent): void => {
 				console.log(`Error in websocket.`, event);
+				// Close the websocket. It will trigger the webwocket.onclose callback,
+				//   which will call the closeCallback.
+				if (this.webSocket !== undefined) {
+					this.webSocket.close();
+				}
+				// Reject so that the user knows something went wrong.
 				reject(new Error(`Error in websocket: ${event.message}`));
 			};
 
 			// When the websocket disconnects...
-			this.webSocket.onclose = (event: CloseEvent): void => {
+			this.webSocket.onclose = (): void => {
 				this.webSocket = undefined;
-				console.log(event);
+				this.closeCallback();
 			};
 
 			// Make sure to close the websocket before unloading the page.
@@ -115,6 +121,11 @@ export class WS {
 			this.webSocket.close();
 			this.webSocket = undefined;
 		}
+	}
+
+	/** Returns true if the websocket is connecting or connected. */
+	isConnectingOrConnected(): boolean {
+		return this.webSocket !== undefined;
 	}
 
 	/** Sends the JSON data along the web socket. Returns a promise resolving with response JSON data. */
@@ -143,6 +154,11 @@ export class WS {
 		this.handlers.delete(module);
 	}
 
+	/** Sets a callback that is called when the connection is closed. */
+	setCloseCallback(closeCallback: () => void): void {
+		this.closeCallback = closeCallback;
+	}
+
 	/** The WebSocket connection. */
 	private webSocket: WebSocket | undefined;
 
@@ -154,6 +170,9 @@ export class WS {
 
 	/** The handlers for received messages. */
 	private handlers: Map<string, (response: JSONType | undefined) => void> = new Map();
+
+	/** A callback that is called when the connection is closed. */
+	private closeCallback: () => void = () => {};
 }
 
 export class PromiseFunctions {
