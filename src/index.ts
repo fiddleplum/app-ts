@@ -19,3 +19,4 @@ export * from './components/toggle-button';
 export * from './components/elm-form';
 export * from './components/elm-checkbox';
 export * from './components/elm-radiobutton';
+export * from './components/text-box';
