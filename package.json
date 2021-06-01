@@ -4,10 +4,11 @@
 	"description": "Elm App",
 	"private": true,
 	"scripts": {
-		"setup": "yarn install; mkdir -p dist",
-		"update": "yarn install --no-default-rc",
+		"setup": "yarn install --pure-lockfile; mkdir -p dist",
+		"update": "rm -f yarn.lock; yarn install",
 		"build": "webpack --config webpack.dev.js",
-		"build-production": "webpack --config webpack.prod.js"
+		"build-production": "webpack --config webpack.prod.js",
+		"docs": "typedoc --options docs/typedoc.json"
 	},
 	"repository": {
 		"type": "git",
@@ -15,20 +16,19 @@
 	},
 	"author": "Stephen O'Rourley",
 	"license": "ISC",
-	"bugs": {
-		"url": "https://github.com/fiddleplum/elm-app/issues"
-	},
 	"homepage": "https://github.com/fiddleplum/elm-app",
 	"devDependencies": {
-		"@typescript-eslint/eslint-plugin": "latest",
-		"@typescript-eslint/parser": "latest",
-		"eslint": "latest",
-		"raw-loader": "latest",
-		"ts-loader": "latest",
 		"typescript": "latest",
+		"ts-loader": "latest",
+
+		"@typescript-eslint/parser": "latest",
+		"@typescript-eslint/eslint-plugin": "latest",
+		"eslint": "latest",
+
 		"webpack": "latest",
 		"webpack-cli": "latest",
-		"webpack-dev-server": "latest",
-		"webpack-merge": "latest"
+		"webpack-merge": "latest",
+
+		"typedoc": "latest"
 	}
 }

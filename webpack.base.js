@@ -3,15 +3,12 @@
 module.exports = {
 	entry: './src/app.ts',
 	output: {
-		filename: 'script.js'
+		filename: 'script.js',
+		library: 'Elm'
 	},
 	resolve: {
 		extensions: ['.ts', '.js']
 		// plugins: [new TSConfigPathsWebpackPlugin()]
-	},
-	devServer:{
-		contentBase: 'src',
-		watchContentBase: true
 	},
 	watchOptions: {
 		aggregateTimeout: 1000,
@@ -21,15 +18,9 @@ module.exports = {
 		rules: [{
 			test: /\.ts$/,
 			loader: 'ts-loader'
-		}, {
-			test: /\.(css|svg|html)$/,
-			use: 'raw-loader'
 		}]
 	},
 	stats: {
 		assets: false,
-	},
-	devServer: {
-		stats: 'errors-only'
 	}
 };
