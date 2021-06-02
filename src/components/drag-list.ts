@@ -28,8 +28,10 @@ export class DragList extends Component {
 		// Setup all grabbing elements, those with the 'grab' class.
 		const grabElements = this._itemsElem.querySelectorAll('.grab');
 		for (const grabElement of grabElements) {
-			grabElement.addEventListener('mousedown', this._onGrab);
-			grabElement.addEventListener('touchstart', this._onGrab);
+			if (grabElement instanceof HTMLElement) {
+				grabElement.addEventListener('mousedown', this._onGrab);
+				grabElement.addEventListener('touchstart', this._onGrab);
+			}
 		}
 	}
 
@@ -41,7 +43,7 @@ export class DragList extends Component {
 				if (node instanceof Element) {
 					// Setup all grabbing elements, those with the 'grab' class.
 					const grabElement = node.querySelector('.grab');
-					if (grabElement !== null) {
+					if (grabElement instanceof HTMLElement) {
 						grabElement.addEventListener('mousedown', this._onGrab);
 						grabElement.addEventListener('touchstart', this._onGrab);
 					}

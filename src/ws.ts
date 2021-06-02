@@ -33,7 +33,7 @@ export class WS {
 					}
 
 					// Get the id of the response.
-					const id = response.id;
+					const id = response['id'];
 					if (id !== undefined) {
 						if (typeof id !== 'number') {
 							throw new Error('Response.id must be a number.');
@@ -50,12 +50,12 @@ export class WS {
 						this.uniqueIds.release(id);
 
 						// If the response was not a success, call reject the promise function.
-						const success = response.success;
+						const success = response['success'];
 						if (typeof success !== 'boolean') {
 							throw new Error('Response.success must be a boolean.');
 						}
 						if (success === false) {
-							const error = response.error;
+							const error = response['error'];
 							if (typeof error !== 'string') {
 								throw new Error('Response.error must be a string when response.success is false.');
 							}
@@ -63,12 +63,12 @@ export class WS {
 						}
 						else {
 							// Call the resolve function.
-							promiseFunctions.resolve(response.data);
+							promiseFunctions.resolve(response['data']);
 						}
 					}
 					// It doesn't have an id, so it must be a handler.
 					else {
-						const module = response.module;
+						const module = response['module'];
 						if (typeof module !== 'string') {
 							throw new Error('Response.module must be a string.');
 						}
@@ -77,7 +77,7 @@ export class WS {
 						if (handler === undefined) {
 							return;
 						}
-						handler(response.data);
+						handler(response['data']);
 					}
 				}
 				catch (error) {
@@ -88,7 +88,7 @@ export class WS {
 			};
 
 			// When there is an error in the websocket...
-			this.webSocket.onerror = (event: ErrorEvent): void => {
+			this.webSocket.onerror = (event: Event): void => {
 				console.log(`Error in websocket.`, event);
 				// Close the websocket. It will trigger the webwocket.onclose callback,
 				//   which will call the closeCallback.
@@ -96,7 +96,7 @@ export class WS {
 					this.webSocket.close();
 				}
 				// Reject so that the user knows something went wrong.
-				reject(new Error(`Error in websocket: ${event.message}`));
+				reject(new Error(`Error in websocket: ${event}`));
 			};
 
 			// When the websocket disconnects...

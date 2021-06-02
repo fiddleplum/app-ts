@@ -30,7 +30,7 @@ export abstract class SimpleApp extends App {
 
 	/** Processes a query, loading a page. */
 	private async _processQuery(query: Router.Query): Promise<void> {
-		const pageName = query.page !== undefined ? query.page : '';
+		const pageName = query['page'] !== undefined ? query['page'] : '';
 		const Page = this.pages.get(pageName);
 		// Invalid page, do nothing.
 		if (Page === undefined) {

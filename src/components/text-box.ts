@@ -48,7 +48,7 @@ export class TextBox extends Component {
 	setText(text: string): void {
 		this._textArea.value = text;
 		if (this._autoResize) {
-			(this.root as HTMLElement).dataset.replicatedValue = text;
+			(this.root as HTMLElement).dataset['replicatedValue'] = text;
 		}
 		this._currentText = text;
 	}
@@ -101,7 +101,7 @@ export class TextBox extends Component {
 			const oldText = this._currentText;
 			// If auto-resize, change the replicated-value attribute.
 			if (this._autoResize) {
-				(this.root as HTMLElement).dataset.replicatedValue = newText;
+				(this.root as HTMLElement).dataset['replicatedValue'] = newText;
 			}
 			// Set the new text.
 			this._currentText = newText;

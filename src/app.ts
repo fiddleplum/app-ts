@@ -14,6 +14,13 @@ export abstract class App extends Component {
 		new App.appClass();
 	}
 
+	/** Destroys the app. */
+	static destroyApp(): void {
+		if (window.app !== undefined) {
+			window.app.destroy();
+		}
+	}
+
 	/**
 	 * Constructs a app inside the body.
 	 */
@@ -23,9 +30,6 @@ export abstract class App extends Component {
 		// Make the app global.
 		window.app = this;
 	}
-
-	/** Destroys the app. */
-	abstract destroy(): void;
 
 	/** The subclass of App to be instantiated. */
 	private static appClass: new () => App;
@@ -52,7 +56,5 @@ window.addEventListener('load', () => {
 });
 
 window.addEventListener('unload', () => {
-	if (window.app !== undefined) {
-		window.app.destroy();
-	}
+	App.destroyApp();
 });
